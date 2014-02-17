@@ -17,26 +17,12 @@ require('vendor/http/http.php');
 require('vendor/oauth-api/oauth_client.php');
 require('libraries/functions.php');
 
-/*
- * ============================================
- *  Maintenance Page
- * ============================================
- */
-
-$content = getContent('maintenance.php', array(
-));
-
-include('views/layout.php');
-
-/*
- * ----
- */
 
 $client = new oauth_client_class;
 $client->debug = 0;
 $client->debug_http = 1;
 $client->server = 'XING';
-$client->redirect_uri = 'http://api.paneon.de/index.php';
+$client->redirect_uri = 'http://api-dev.paneon.de/index.php';
 
 $client->client_id = 'fbb32757b4e2dab792a8';
 $client->client_secret = 'c9a177434719ec2eab49765b9e6fe571c76f3661';
@@ -231,8 +217,6 @@ if($success)
 
             if(!empty($userResult->educational_background) && !empty($userResult->educational_background->qualifications))
             {
-
-
                 $data['Firmenname'] = $userResult->professional_experience->primary_company->name;
                 $data['Position'] = $userResult->professional_experience->primary_company->title;
             }
