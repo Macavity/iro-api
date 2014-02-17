@@ -27,7 +27,6 @@ $content = getContent('maintenance.php', array(
 ));
 
 include('views/layout.php');
-die();
 
 /*
  * ----
