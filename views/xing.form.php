@@ -1,6 +1,7 @@
 <h1>Willkommen <?=$userName?></h1>
 <form action="/index.php" method="get">
     <input type="hidden" name="form" value="xing">
+    <input type="hidden" name="fmid" value="<?=$fmID?>">
     <div class="form-horizontal">
         <div class="col-md-3 col-md-offset-1">
             <label for="xinglink">Link zum Xing-Profil</label>

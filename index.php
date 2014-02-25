@@ -10,19 +10,86 @@
  *  Get the http.php file from http://www.phpclasses.org/httpclient
  */
 
-error_reporting(E_ALL);
+error_reporting(E_ALL ^ E_DEPRECATED);
 ini_set("display_errors", "stdout");
 
 require('vendor/http/http.php');
 require('vendor/oauth-api/oauth_client.php');
 require('libraries/functions.php');
+require('libraries/filemaker-12/FileMaker.php');
+
+if(session_id() == '')
+{
+    session_start();
+}
+
+$fmID = (empty($_REQUEST['fmid']) || !is_numeric($_REQUEST['fmid'])) ? 0 : $_REQUEST['fmid'];
+$iroClient = (empty($_REQUEST['clientid'])) ? 0 : $_REQUEST['clientid'];
+/*
+006D4-PPAD0-R70AA => 30
+006D4-P3AD0-R70A5 => 30
+
+"A"; 5
+"D"; 8
+"P"; 3
+"Q"; 1
+"R"; 9
+   006D4-PPAD0-R70AA
+=> 006843358097055
+
+006843358097055
+
+
+*/
+$clients = array(
+    // Demo Datenbank
+    '006D4-PPAD0-R70AA' => array(
+        'db_name' => 'iRO_35',
+        'host' => 'http://host1.kon5.net/',
+    ),
+    // Kühne
+    '006D4-P3AD0-R70A5' => array(
+        'db_name' => 'iRO40KU1',
+        'host' => 'http://host1.kon5.net/',
+    ),
+    // PR Hofer
+    '006D4-P35D0-R70A5' => array(
+        'db_name' => 'iRO40PH1',
+        'host' => 'http://host1.kon5.net/',
+    ),
+);
+
+$_SESSION['client_id'] = $iroClient;
+
+
+
+if($fmID == 0 || !isset($clients[$_SESSION['client_id']]))
+{
+    $content = getContent('xing.error.php', array());
+    include('views/layout.php');
+    die();
+}
+
+$clientConfig = $clients[$_SESSION['client_id']];
+
+$fm = new FileMaker($clientConfig['db_name'], $clientConfig['host'],'maintenance','');
+
+
+/**
+ * Import Data to the Database (Final Step)
+ */
+if(!empty($_POST['action']) && $_POST['action'] == "import")
+{
+
+    $sessionData = $_SESSION['data'][$fmID]['fields'];
+}
 
 
 $client = new oauth_client_class;
 $client->debug = 0;
 $client->debug_http = 1;
 $client->server = 'XING';
-$client->redirect_uri = 'http://api-dev.paneon.de/index.php';
+$client->redirect_uri = 'http://api-dev.paneon.de/index.php?clientid='.$_SESSION['client_id'].'fmid='.$fmID;
 
 $client->client_id = 'fbb32757b4e2dab792a8';
 $client->client_secret = 'c9a177434719ec2eab49765b9e6fe571c76f3661';
@@ -80,7 +147,7 @@ if($success)
 
             $userResult = $result->users[0];
 
-            echo "<!-- ".print_r($userResult,true)." -->";
+            //echo "<!-- ".print_r($userResult,true)." -->";
 
             $data = array(
                 'Vorname' => $userResult->first_name,
@@ -234,10 +301,13 @@ if($success)
                 );
             }
 
+            $_SESSION['data'][$fmID]['fields'] = $cleanedData;
+
             echo "<!-- ".print_r($cleanedData,true)." -->";
 
             $content = getContent('xing.data.php', array(
                 'userName' => $user->display_name,
+                'fmID' => $fmID,
                 'result' => $userResult,
                 'data' => $cleanedData,
             ));
@@ -248,7 +318,8 @@ if($success)
         {
             //echo "<br>Error".$client->error;
             $content = getContent('xing.form.php', array(
-                'userName' => $user->display_name
+                'userName' => $user->display_name,
+                'fmID' => $fmID,
             ));
 
             include('views/layout.php');
@@ -258,7 +329,8 @@ if($success)
     {
         // echo "<br>Error".$client->error;
         $content = getContent('xing.form.php', array(
-            'userName' => $user->display_name
+            'userName' => $user->display_name,
+            'fmID' => $fmID,
         ));
 
         include('views/layout.php');

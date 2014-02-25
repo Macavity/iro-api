@@ -1,6 +1,6 @@
 
 .wrapper {
-  width: 800px;
+  width: 1000px;
   margin: 20px;
 
   .front-page {
@@ -13,4 +13,24 @@
       margin-top: 7px;
     }
   }
+
+  .col-1 {
+    width: 20px;
+    float: left;
+    position: relative;
+    min-height: 1px;
+    padding-left: 15px;
+    padding-right: 15px;
+  }
+
+  .form-data {
+    .row {
+      border-top: 1px solid #ddd;
+      &:nth-child(odd) {
+        background-color: #f9f9f9;
+      }
+
+    }
+  }
+
 }
