@@ -1,2 +1,6 @@
 .idea
 bower_components
+xing/node_modules
+xing/.sass-cache
+xing/app/config/local
+xing/app/storage
