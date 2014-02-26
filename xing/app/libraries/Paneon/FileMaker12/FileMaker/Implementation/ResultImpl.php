@@ -1,4 +1,7 @@
 <?php
+
+namespace Paneon\FileMaker12;
+
   class FileMaker_Result_Implementation
 {
   var $_fm;

@@ -1,4 +1,7 @@
 <?php
+
+namespace Paneon\FileMaker12;
+
 /**
  * FileMaker API PHP
  *
