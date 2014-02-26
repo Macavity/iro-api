@@ -1,6 +1,5 @@
 .idea
-bower_components
-xing/node_modules
-xing/.sass-cache
-xing/app/config/local
-xing/app/storage
+.env.local.php
+.env.php
+.DS_Store
+Thumbs.db
