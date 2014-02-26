@@ -1,5 +1,7 @@
 <?php
 
+namespace Paneon\FileMaker12;
+
 /**
  * FileMaker API for PHP
  *
@@ -103,7 +105,7 @@ class FileMaker
      * @static
      *
      */
-    function isError($variable)
+    static function isError($variable)
     {
         return is_a($variable, 'FileMaker_Error');
     }
@@ -148,7 +150,7 @@ class FileMaker
      * @param string $username Account name to log into database.
      * @param string $password Password for account.
      */
-    function FileMaker($database = NULL, $hostspec = NULL, $username = NULL, $password = NULL)
+    public function __construct($database = NULL, $hostspec = NULL, $username = NULL, $password = NULL)
     {
         $this->_impl = new FileMaker_Implementation($database, $hostspec, $username, $password);
     }
@@ -267,7 +269,7 @@ class FileMaker
      *
      * @return FileMaker_Command_Find New Find command object.
      */
-    function &newFindCommand($layout)
+    function newFindCommand($layout)
     {
         return $this->_impl->newFindCommand($layout);
     }
@@ -308,7 +310,7 @@ class FileMaker
      *
      * @return FileMaker_Command_FindAny New Find Any command object.
      */
-    function &newFindAnyCommand($layout)
+    function newFindAnyCommand($layout)
     {
         return $this->_impl->newFindAnyCommand($layout);
     }

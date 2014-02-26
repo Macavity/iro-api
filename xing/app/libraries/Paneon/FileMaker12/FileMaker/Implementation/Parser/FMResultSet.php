@@ -1,4 +1,7 @@
 <?php
+
+namespace Paneon\FileMaker12;
+
   require_once dirname(__FILE__) . '/../../Layout.php';
 require_once dirname(__FILE__) . '/../../RelatedSet.php';
 require_once dirname(__FILE__) . '/../../Record.php';

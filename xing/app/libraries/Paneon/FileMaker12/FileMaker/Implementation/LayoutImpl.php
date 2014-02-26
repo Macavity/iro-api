@@ -1,4 +1,7 @@
 <?php
+
+namespace Paneon\FileMaker12;
+
   require_once dirname(__FILE__) . '/../Field.php';
 require_once dirname(__FILE__) . '/Parser/FMPXMLLAYOUT.php';
  class FileMaker_Layout_Implementation

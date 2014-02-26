@@ -1,4 +1,7 @@
 <?php
+
+namespace Paneon\FileMaker12;
+
   class FileMaker_Parser_FMPXMLLAYOUT
 {
   var $Vd05b6ed7;

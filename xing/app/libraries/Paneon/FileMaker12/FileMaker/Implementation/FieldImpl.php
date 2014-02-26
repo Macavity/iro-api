@@ -1,4 +1,7 @@
 <?php
+
+namespace Paneon\FileMaker12;
+
   require_once dirname(__FILE__) . '/../Error/Validation.php';
  class FileMaker_Field_Implementation
 {

@@ -1,4 +1,7 @@
 <?php
+
+namespace Paneon\FileMaker12;
+
   class FileMaker_Record_Implementation
 {
   var $_fields = array();
