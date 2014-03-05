@@ -9,7 +9,7 @@
 </div>
 <br>
 <div class="row">
-    <div class="col-md-12"><h3>Gefundenes Profil: {{ $result->display_name; }}</h3></div>
+    <div class="col-md-12"><h3>Gefundenes Profil: {{ $data['display_name']['value'] }}</h3></div>
 </div>
 {{ Form::open(array(
     'url' => route(
