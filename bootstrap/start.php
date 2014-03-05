@@ -26,7 +26,7 @@ $app = new Illuminate\Foundation\Application;
 
 $env = $app->detectEnvironment(array(
 
-	'local' => array('MacBook-6.local'),
+	'local' => array('MacBook-6.local', 'client174-vlan1106.collins.kg'),
 
 ));
 

@@ -8,6 +8,9 @@ include_once(base_path().'/app/libraries/filemaker-12/FileMaker.php');
 
 class PageController extends BaseController {
 
+    /**
+     * @var Object
+     */
     protected $layout = 'layouts.master';
 
     private $fmRecordId = 0;
@@ -16,6 +19,12 @@ class PageController extends BaseController {
 
     private $fm = null;
 
+    /**
+     * The User who logged into Xing
+     *
+     * @var Object
+     * @property $display_name
+     */
     private $xingUser = null;
 
     /**
@@ -53,6 +62,11 @@ class PageController extends BaseController {
                 ' set the client_id to Consumer key and client_secret with Consumer secret.');
         }
 
+        /**
+         * @var Object $user
+         */
+        $user = null;
+
         if(($success = $oAuthClient->Initialize()))
         {
             if(($success = $oAuthClient->Process()))
@@ -84,11 +98,11 @@ class PageController extends BaseController {
             /*
              * Find the Client
              */
-            $this->client = Client::where('serial',$this->serialNumber.'---')->first();
+            $this->client = Client::where('serial', '=', $this->serialNumber)->first();
 
             if(empty($this->client))
             {
-                $this->error();
+                $this->error("Seriennummer ungültig.");
                 return;
             }
 
@@ -104,9 +118,8 @@ class PageController extends BaseController {
             }
             else
             {
-
-
-                $this->processQuery($query, $oAuthClient);
+                $data = $this->processQuery($query, $oAuthClient);
+                $this->showData($data);
             }
 
         }
@@ -143,6 +156,58 @@ class PageController extends BaseController {
         }
     }
 
+    /**
+     * Show Login Form
+     */
+    public function showLogin()
+    {
+        $this->layout->content = View::make('pages.login');
+    }
+
+    /**
+     * Process the Login
+     */
+    public function doLogin()
+    {
+        $rules = [
+            'email'     => 'required|email',
+            'password'  => 'required'
+        ];
+
+        $validator = Validator::make(Input::all(), $rules);
+
+        if($validator->fails())
+        {
+            return Redirect::to('login')
+                ->withErrors($validator)
+                ->withInput(Input::only('email'));
+        }
+        else
+        {
+            $userdata = [
+                'email'     => Input::get('email'),
+                'password'  => Input::get('password'),
+            ];
+
+            if(Auth::attempt($userdata))
+            {
+                return Redirect::to('admin');
+            }
+            else
+            {
+                return Redirect::to('login')
+                    ->withInput(Input::only('email'));
+            }
+        }
+
+    }
+
+    public function doLogout()
+    {
+        Auth::logout();
+        return Redirect::to('login');
+    }
+
     private function getLabel($key)
     {
         switch($key){
@@ -161,6 +226,12 @@ class PageController extends BaseController {
         }
     }
 
+    /**
+     * @param                                $query
+     * @param Paneon\OAuthClient\OAuthClient $oAuthClient
+     *
+     * @return array
+     */
     private function processQuery($query, $oAuthClient)
     {
         if(substr_count($query,"profile/") > 0)
@@ -177,183 +248,207 @@ class PageController extends BaseController {
             $query = substr($query, 0, strpos($query, "?"));
         }
 
+        /**
+         * Returned Xing Result
+         * @var Object
+         * @property $users
+         */
+        $result = null;
+
         $success = $oAuthClient->CallAPI(
             'https://api.xing.com/v1/users/'.$query,
             'GET', array(), array('FailOnAccessError' => true), $result);
 
-        if($success)
+        if($success == false)
         {
+            Log::error("Failed to connect to  XING API", array('context' => 'PageController.processQuery'));
+            throwException(new Exception("Failed to connect to Xing Api"));
+        }
 
-            $userResult = $result->users[0];
+        /**
+         * @var Object $userResult
+         */
+        $userResult = (!empty($result->users)) ? $result->users[0] : false;
 
-            //echo "<!-- ".print_r($userResult,true)." -->";
+        if($userResult === false)
+        {
+            Log::error("Failed to connect to  XING API", array('context' => 'PageController.processQuery', 'more' => 'No user found'));
+            throwException(new Exception("Failed to connect to Xing API"));
+        }
 
-            $data = array(
-                'Vorname' => $userResult->first_name,
-                'Nachname' => $userResult->last_name,
-                'XING' => $userResult->permalink,
-                'Notiz' => '',
-                'WeitereSprachen' => array(),
+        //dd($userResult);
+
+        $data = array(
+            'display_name' => $userResult->display_name,
+            'Vorname' => $userResult->first_name,
+            'Nachname' => $userResult->last_name,
+            'XING' => $userResult->permalink,
+            'Notiz' => '',
+            'WeitereSprachen' => array(),
+        );
+
+
+
+        // Anrede
+        switch($userResult->gender)
+        {
+            case 'm':
+                $data['Anrede'] = "Herr"; break;
+            case 'f':
+                $data['Anrede'] = "Frau"; break;
+        }
+
+        // Geburtsdatum
+        if(!empty($userResult->birth_data->day)
+            && !empty($userResult->birth_data->month)
+            && !empty($userResult->birth_data->year))
+        {
+            $data['Geburtsdatum'] = $userResult->birth_data->month.$userResult->birth_data->day.$userResult->birth_data->year;
+        }
+
+        // Mail | BIZ
+        if(!empty($userResult->active_email))
+        {
+            $data['MAIL | BIZ'] = $userResult->active_email;
+        }
+
+        // Wants
+        if(!empty($userResult->wants))
+        {
+            $data['Notiz'] .= "\nSucht: ".$userResult->wants;
+        }
+
+        // Haves
+        if(!empty($userResult->haves))
+        {
+            $data['Notiz'] .= "\nBietet an: ".$userResult->haves;
+        }
+
+        // Languages
+        if(!empty($userResult->languages))
+        {
+            $native = array();
+            $langs = array(
+                'de' => 'deutsch',
+                'en' => 'englisch',
+                'es' => 'spanisch',
+                'fi' => 'finnisch',
+                'fr' => 'französisch',
+                'hu' => 'ungarisch',
+                'it' => 'italienisch',
+                'ja' => 'japanisch',
+                'ko' => 'koreanisch',
+                'nl' => 'niederländisch',
+                'pl' => 'polnisch',
+                'pt' => 'portugiesisch',
+                'ru' => 'russisch',
+                'sv' => 'schwedisch',
+                'tr' => 'türkisch',
+                'zh' => 'chinesisch',
+                'ro' => 'rumänisch',
+                'no' => 'norwegisch',
+                'cs' => 'tschechisch',
+                'el' => 'griechisch',
+                'da' => 'dänisch',
+                'ar' => 'arabisch',
+                'he' => 'hebräisch',
             );
 
-            // Anrede
-            switch($userResult->gender)
+            foreach($langs as $key => $label)
             {
-                case 'm':
-                    $data['Anrede'] = "Herr"; break;
-                case 'f':
-                    $data['Anrede'] = "Frau"; break;
-            }
-
-            // Geburtsdatum
-            if(!empty($userResult->birth_data->day)
-                && !empty($userResult->birth_data->month)
-                && !empty($userResult->birth_data->year))
-            {
-                $data['Geburtsdatum'] = $userResult->birth_data->month.$userResult->birth_data->day.$userResult->birth_data->year;
-            }
-
-            // Mail | BIZ
-            if(!empty($userResult->active_email))
-            {
-                $data['MAIL | BIZ'] = $userResult->active_email;
-            }
-
-            // Wants
-            if(!empty($userResult->wants))
-            {
-                $data['Notiz'] .= "\nSucht: ".$userResult->wants;
-            }
-
-            // Haves
-            if(!empty($userResult->haves))
-            {
-                $data['Notiz'] .= "\nBietet an: ".$userResult->haves;
-            }
-
-            // Languages
-            if(!empty($userResult->languages))
-            {
-                $native = array();
-                $langs = array(
-                    'de' => 'deutsch',
-                    'en' => 'englisch',
-                    'es' => 'spanisch',
-                    'fi' => 'finnisch',
-                    'fr' => 'französisch',
-                    'hu' => 'ungarisch',
-                    'it' => 'italienisch',
-                    'ja' => 'japanisch',
-                    'ko' => 'koreanisch',
-                    'nl' => 'niederländisch',
-                    'pl' => 'polnisch',
-                    'pt' => 'portugiesisch',
-                    'ru' => 'russisch',
-                    'sv' => 'schwedisch',
-                    'tr' => 'türkisch',
-                    'zh' => 'chinesisch',
-                    'ro' => 'rumänisch',
-                    'no' => 'norwegisch',
-                    'cs' => 'tschechisch',
-                    'el' => 'griechisch',
-                    'da' => 'dänisch',
-                    'ar' => 'arabisch',
-                    'he' => 'hebräisch',
-                );
-
-                foreach($langs as $key => $label)
+                if(!empty($userResult->$key))
                 {
-                    if(!empty($userResult->$key))
+                    switch($userResult->$key)
                     {
-                        switch($userResult->$key)
-                        {
-                            case 'native':  $data['Muttersprache'] = $label; break;
-                            case 'basic':
-                            case 'good':
-                            case 'fluent':
-                                $data['WeitereSprachen'][] = $label; break;
-                        }
+                        case 'native':  $data['Muttersprache'] = $label; break;
+                        case 'basic':
+                        case 'good':
+                        case 'fluent':
+                            $data['WeitereSprachen'][] = $label; break;
                     }
                 }
-
             }
-
-            // Interests
-            if(!empty($userResult->interests))
-            {
-                $data['Notiz'] .= "\nInteressen: ".$userResult->interests;
-            }
-
-            // Image
-            if(!empty($userResult->photo_urls)){
-                if(!empty($userResult->photo_urls->large))
-                {
-                    $data['photo'] = $userResult->photo_urls->large;
-                }
-                elseif(!empty($userResult->photo_urls->thumb))
-                {
-                    $data['photo'] = $userResult->photo_urls->thumb;
-                }
-            }
-
-            // Address
-            if(!empty($userResult->private_address))
-            {
-                $data['PersonenID_Adressen::Ort'] = $userResult->private_address->city;
-                $data['PersonenID_Adressen::Land'] = $userResult->private_address->country;
-                $data['PersonenID_Adressen::PLZ'] = $userResult->private_address->zip_code;
-                $data['PersonenID_Adressen::Strasse'] = $userResult->private_address->street;
-                $data['FON | PRIV'] = $userResult->private_address->phone;
-                $data['MAIL | PRIV'] = $userResult->private_address->email;
-                $data['MOBIL'] = $userResult->private_address->city;
-            }
-
-
-            if(!empty($userResult->business_address))
-            {
-                $data['FON | BIZ'] = $userResult->business_address->phone;
-                $data['MAIL | BIZ'] = $userResult->business_address->email;
-            }
-
-            if(!empty($userResult->professional_experience) && !empty($userResult->professional_experience->primary_company))
-            {
-                $data['Firmenname'] = $userResult->professional_experience->primary_company->name;
-                $data['Position'] = $userResult->professional_experience->primary_company->title;
-            }
-
-            if(!empty($userResult->educational_background) && !empty($userResult->educational_background->qualifications))
-            {
-                $data['Firmenname'] = $userResult->professional_experience->primary_company->name;
-                $data['Position'] = $userResult->professional_experience->primary_company->title;
-            }
-
-            $cleanedData = array();
-
-            foreach($data as $key => $value){
-                if(empty($value)){
-                    continue;
-                }
-                $cleanedData[$key] = array(
-                    'field' => $key,
-                    'label' => $this->getLabel($key),
-                    'value' => $value,
-                );
-            }
-
-            $_SESSION['data'][$this->fmRecordId]['fields'] = $cleanedData;
-
-            echo "<!-- ".print_r($cleanedData,true)." -->";
-
-            $this->layout->content = View::make('pages.data')
-                ->with(array(
-                    'userName' => $this->xingUser->display_name,
-                    'serial' => $this->serialNumber,
-                    'fmId' => $this->fmRecordId,
-                    'result' => $userResult,
-                    'data' => $cleanedData,
-                ));
 
         }
+
+        // Interests
+        if(!empty($userResult->interests))
+        {
+            $data['Notiz'] .= "\nInteressen: ".$userResult->interests;
+        }
+
+        // Image
+        if(!empty($userResult->photo_urls)){
+            if(!empty($userResult->photo_urls->large))
+            {
+                $data['photo'] = $userResult->photo_urls->large;
+            }
+            elseif(!empty($userResult->photo_urls->thumb))
+            {
+                $data['photo'] = $userResult->photo_urls->thumb;
+            }
+        }
+
+        // Address
+        if(!empty($userResult->private_address))
+        {
+            $data['PersonenID_Adressen::Ort'] = $userResult->private_address->city;
+            $data['PersonenID_Adressen::Land'] = $userResult->private_address->country;
+            $data['PersonenID_Adressen::PLZ'] = $userResult->private_address->zip_code;
+            $data['PersonenID_Adressen::Strasse'] = $userResult->private_address->street;
+            $data['FON | PRIV'] = $userResult->private_address->phone;
+            $data['MAIL | PRIV'] = $userResult->private_address->email;
+            $data['MOBIL'] = $userResult->private_address->city;
+        }
+
+
+        if(!empty($userResult->business_address))
+        {
+            $data['FON | BIZ'] = $userResult->business_address->phone;
+            $data['MAIL | BIZ'] = $userResult->business_address->email;
+        }
+
+        if(!empty($userResult->professional_experience) && !empty($userResult->professional_experience->primary_company))
+        {
+            $data['Firmenname'] = $userResult->professional_experience->primary_company->name;
+            $data['Position'] = $userResult->professional_experience->primary_company->title;
+        }
+
+        if(!empty($userResult->educational_background) && !empty($userResult->educational_background->qualifications))
+        {
+            $data['Firmenname'] = $userResult->professional_experience->primary_company->name;
+            $data['Position'] = $userResult->professional_experience->primary_company->title;
+        }
+
+        $cleanedData = array();
+
+        foreach($data as $key => $value){
+            if(empty($value)){
+                continue;
+            }
+            $cleanedData[$key] = array(
+                'field' => $key,
+                'label' => $this->getLabel($key),
+                'value' => $value,
+            );
+        }
+
+        $_SESSION['data'][$this->fmRecordId]['fields'] = $cleanedData;
+
+        echo "<!-- ".print_r($cleanedData,true)." -->";
+
+        return $cleanedData;
+    }
+
+    private function showData($data)
+    {
+        $this->layout->content = View::make('pages.data')
+            ->with(array(
+                'userName' => $this->xingUser->display_name,
+                'serial' => $this->serialNumber,
+                'fmId' => $this->fmRecordId,
+                'data' => $data,
+            ));
     }
 
 }

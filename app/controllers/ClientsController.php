@@ -2,7 +2,7 @@
 
 class ClientsController extends BaseController {
 
-    protected $layout = 'layouts/master';
+    protected $layout = 'layouts.admin';
 
 	/**
 	 * Display a listing of the resource.
@@ -11,8 +11,10 @@ class ClientsController extends BaseController {
 	 */
 	public function index()
 	{
-        $this->layout->title = "iRO Kunden";
-        $this->layout->content = View::make('clients.index');
+
+        $clients = Client::all();
+
+        $this->layout->content = View::make('clients.index')->with('clients', $clients);
 	}
 
 	/**
@@ -22,7 +24,7 @@ class ClientsController extends BaseController {
 	 */
 	public function create()
 	{
-        return View::make('clients.create');
+        $this->layout->content = View::make('clients.create');
 	}
 
 	/**
@@ -32,7 +34,24 @@ class ClientsController extends BaseController {
 	 */
 	public function store()
 	{
-		//
+
+        $rules = Client::$rules;
+
+        $validator = Validator::make(Input::all(), $rules);
+
+        if($validator->fails())
+        {
+            return Redirect::to('admin/clients/create')
+                ->withErrors($validator)
+                ->withInput(Input::all());
+        }
+        else
+        {
+            $client = Client::create(Input::all());
+            Session::flash('message', 'Kunde '.$client->name.' erfolgreich erstellt.');
+            return Redirect::to(action('ClientsController@index'));
+
+        }
 	}
 
 	/**
@@ -43,7 +62,8 @@ class ClientsController extends BaseController {
 	 */
 	public function show($id)
 	{
-        return View::make('clients.show');
+        $client = Client::find($id);
+        $this->layout->content = View::make('clients.show')->with('client', $client);
 	}
 
 	/**
@@ -54,7 +74,9 @@ class ClientsController extends BaseController {
 	 */
 	public function edit($id)
 	{
-        return View::make('clients.edit');
+        $client = Client::find($id);
+
+        $this->layout->content = View::make('clients.edit')->with('client', $client);
 	}
 
 	/**
@@ -65,7 +87,27 @@ class ClientsController extends BaseController {
 	 */
 	public function update($id)
 	{
-		//
+        $client = Client::find($id);
+
+		$rules = Client::$rules;
+
+        $validator = Validator::make(Input::all(), $rules);
+
+        if($validator->fails())
+        {
+            return Redirect::to(action('ClientsController@edit', $client->id))
+                ->withErrors($validator)
+                ->withInput(Input::all());
+
+        }
+        else {
+            $client->fill(Input::all());
+            $client->save();
+
+            Session::flash('message', 'Kunde '.$client->name.' wurde gespeichert.');
+
+            return Redirect::to(action('ClientsController@index'));
+        }
 	}
 
 	/**

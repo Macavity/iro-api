@@ -13,8 +13,6 @@ class ClientsTableSeeder extends Seeder {
                 'host' => 'host1.kon5.net',
                 'db_name' => 'iRO_35',
                 'serial' => '006D4-PPAD0-R70AA',
-                'created_at' => time(),
-                'updated_at' => time()
             ],
         ];
 

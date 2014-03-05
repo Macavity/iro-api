@@ -11,6 +11,38 @@
 |
 */
 
+
+// ===============================================
+// LOGIN SECTION =================================
+// ===============================================
+// show the login page
+Route::get('login', [
+    'uses' => 'PageController@showLogin'
+]);
+
+// process the login
+Route::post('login', [
+    'uses' => 'PageController@doLogin'
+]);
+
+Route::get('logout', [
+    'uses' => 'PageController@doLogout'
+]);
+
+// ===============================================
+// ADMIN SECTION =================================
+// ===============================================
+Route::group(array('prefix' => 'admin', 'before' => 'auth'), function()
+{
+    Route::get('/', function(){
+        return View::make('admin.dashboard');
+    });
+
+    Route::resource('clients', 'ClientsController');
+
+    Route::resource('users', 'UsersController');
+});
+
 // First Page (Form)
 Route::any('/{serial}/{fmId}/', array(
         'as' => 'form',
@@ -29,54 +61,11 @@ Route::get('/debug/fm', function(){
     print_r($result);
 });
 
-// ===============================================
-// LOGIN SECTION =================================
-// ===============================================
-// show the login page
-Route::get('login', function()
-{
-    // show the login page (app/views/login.blade.php)
-    return View::make('login');
-});
-
-// process the login
-Route::post('login', function()
-{
-    // validate
-    // process login
-    // if successful, redirect
-    return Redirect::intended();
-});
-
-// ===============================================
-// ADMIN SECTION =================================
-// ===============================================
-Route::group(array('prefix' => 'admin', 'before' => 'auth'), function()
-{
-    // main page for the admin section (app/views/admin/dashboard.blade.php)
-    Route::get('/', function()
-    {
-        return View::make('admin.dashboard');
-    });
-
-    // subpage for the posts found at /admin/posts (app/views/admin/posts.blade.php)
-    Route::get('posts', function()
-    {
-        return View::make('admin.posts');
-    });
-
-    // subpage to create a post found at /admin/posts/create (app/views/admin/posts-create.blade.php)
-    Route::get('posts/create', function()
-    {
-        return View::make('admin.posts-create');
-    });
-    Route::resource('clients', 'ClientsController');
-});
-
 
 App::missing(function($exception) {
     // shows an error page (app/views/error.blade.php)
     // returns a page not found error
     return Response::view('error', array(), 404);
 });
+
 
