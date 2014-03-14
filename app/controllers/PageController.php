@@ -13,10 +13,15 @@ class PageController extends BaseController {
      */
     protected $layout = 'layouts.master';
 
+    protected $fmLayout = 'Personenliste_Web';
+
     private $fmRecordId = 0;
 
     private $serialNumber = "";
 
+    /**
+     * @var FileMaker
+     */
     private $fm = null;
 
     /**
@@ -46,65 +51,33 @@ class PageController extends BaseController {
         $this->serialNumber = $serial;
         $this->fmRecordId = $fmId;
 
-        $oAuthClient = new Paneon\OAuthClient\OAuthClient();
-        $oAuthClient->debug = 0;
-        $oAuthClient->debug_http = 1;
-        $oAuthClient->server = 'XING';
-        $oAuthClient->redirect_uri = route('form', array('serial' => $serial, 'fmId' => $fmId));
-
-        $oAuthClient->client_id = Config::get('xing.consumer_key');
-        $oAuthClient->client_secret = Config::get('xing.consumer_secret');
-
-        if(empty($oAuthClient->client_id) || empty($oAuthClient->client_secret))
-        {
-            die('Please go to XING My Apps page https://dev.xing.com/applications , '.
-                'create an application, and in the line 22'.
-                ' set the client_id to Consumer key and client_secret with Consumer secret.');
-        }
-
-        /**
-         * @var Object $user
-         */
-        $user = null;
-
-        if(($success = $oAuthClient->Initialize()))
-        {
-            if(($success = $oAuthClient->Process()))
-            {
-                if(strlen($oAuthClient->access_token))
-                {
-                    $success = $oAuthClient->CallAPI(
-                        'https://api.xing.com/v1/users/me',
-                        'GET', array(), array('FailOnAccessError'=>true), $user);
-                }
-            }
-            $success = $oAuthClient->Finalize($success);
-        }
-
-        if($oAuthClient->exit)
-        {
-            exit;
-        }
+        $oAuthClient = $this->getOAuthClient();
 
         /*
          * =============================================
          * Login to Xing Done
          * =============================================
          */
-        if($success)
+        $this->doXingLogin($oAuthClient);
+
+        // Set Display Name of logged in user
+        $this->layout->userName = $this->xingUser->display_name;
+
+        /*
+         * Find the Client
+         */
+        $this->client = Client::where('serial', '=', $this->serialNumber)->first();
+
+        if(empty($this->client))
         {
-            $this->xingUser = $user->users[0];
+            $this->showError("Seriennummer ungültig.");
+            return;
+        }
 
-            /*
-             * Find the Client
-             */
-            $this->client = Client::where('serial', '=', $this->serialNumber)->first();
+        try {
+            $this->initializeFileMaker();
 
-            if(empty($this->client))
-            {
-                $this->error("Seriennummer ungültig.");
-                return;
-            }
+            $this->findFileMakerRecord($fmId);
 
             $query = Input::get('xinglink','');
 
@@ -113,20 +86,35 @@ class PageController extends BaseController {
              */
             if(empty($query))
             {
-                $this->form();
+                $this->showForm();
                 return;
             }
             else
             {
                 $data = $this->processQuery($query, $oAuthClient);
-                $this->showData($data);
-            }
 
+                $isPostedForm = Input::get('formpost') == 'yes' ? true : false;
+
+                if($isPostedForm)
+                {
+                    if($this->importIntoFileMaker($data))
+                    {
+                        $this->showSuccess();
+                    }
+
+                }
+                else
+                {
+                    $this->showData($data);
+                }
+            }
         }
-        else
-        {
-            Redirect::to("404");
+        catch(Exception $e){
+            $this->showError($e->getMessage());
+            return;
         }
+
+
 
 	}
 
@@ -135,7 +123,7 @@ class PageController extends BaseController {
 	 *
 	 * @return Response
 	 */
-	public function form()
+	public function showForm()
 	{
         $this->layout->content = View::make('pages.index')
             ->with('userName', $this->xingUser->display_name)
@@ -143,7 +131,7 @@ class PageController extends BaseController {
             ->with('serial', $this->serialNumber);
 	}
 
-    public function error($message = "")
+    public function showError($message = "")
     {
         if(empty($message))
         {
@@ -154,6 +142,12 @@ class PageController extends BaseController {
             $this->layout->content = View::make('error')
                 ->with('message', $message);
         }
+    }
+
+    public function showSuccess()
+    {
+        $this->layout->content = View::make('success')
+            ->with();
     }
 
     /**
@@ -327,7 +321,6 @@ class PageController extends BaseController {
         // Languages
         if(!empty($userResult->languages))
         {
-            $native = array();
             $langs = array(
                 'de' => 'deutsch',
                 'en' => 'englisch',
@@ -435,9 +428,86 @@ class PageController extends BaseController {
 
         $_SESSION['data'][$this->fmRecordId]['fields'] = $cleanedData;
 
-        echo "<!-- ".print_r($cleanedData,true)." -->";
+        //echo "<!-- ".print_r($cleanedData,true)." -->";
 
         return $cleanedData;
+    }
+
+    private function getOAuthClient()
+    {
+        $oAuthClient = new Paneon\OAuthClient\OAuthClient();
+        $oAuthClient->debug = 0;
+        $oAuthClient->debug_http = 1;
+        $oAuthClient->server = 'XING';
+        $oAuthClient->redirect_uri = route('form', array(
+            'serial' => $this->serialNumber,
+            'fmId' => $this->fmRecordId
+        ));
+
+        $oAuthClient->client_id = Config::get('xing.consumer_key');
+        $oAuthClient->client_secret = Config::get('xing.consumer_secret');
+
+        if(empty($oAuthClient->client_id) || empty($oAuthClient->client_secret))
+        {
+            die('Please go to XING My Apps page https://dev.xing.com/applications , '.
+                'create an application, and in the line 22'.
+                ' set the client_id to Consumer key and client_secret with Consumer secret.');
+        }
+
+        return $oAuthClient;
+    }
+
+    /**
+     * @param Paneon\OAuthClient\OAuthClient $oAuthClient
+     *
+     * @return null
+     */
+    private function doXingLogin($oAuthClient)
+    {
+        $user = null;
+
+        if(($success = $oAuthClient->Initialize()))
+        {
+            if(($success = $oAuthClient->Process()))
+            {
+                if(strlen($oAuthClient->access_token))
+                {
+                    $success = $oAuthClient->CallAPI(
+                        'https://api.xing.com/v1/users/me',
+                        'GET', array(), array('FailOnAccessError'=>true), $user);
+                }
+            }
+            $success = $oAuthClient->Finalize($success);
+        }
+
+        if($oAuthClient->exit)
+        {
+            exit;
+        }
+
+        if($success)
+        {
+            /**
+             * @var Object $user
+             */
+            $this->xingUser = $user->users[0];
+        }
+        else
+        {
+            Redirect::to("404");
+        }
+
+        return $user;
+    }
+
+    private function initializeFileMaker()
+    {
+        $this->fm = new FileMaker($this->client->db_name, $this->client->host, $this->client->fm_user, $this->client->fm_password);
+
+        if(FileMaker::isError($this->fm))
+        {
+            throwException(new Exception("Es konnte keine Verbindung mit der iRO Datenbank hergestellt werden."));
+        }
     }
 
     private function showData($data)
@@ -449,6 +519,71 @@ class PageController extends BaseController {
                 'fmId' => $this->fmRecordId,
                 'data' => $data,
             ));
+    }
+
+    private function importIntoFileMaker($data)
+    {
+        $record = $this->fm->getRecordById($this->fmLayout, $this->fmRecordId);
+
+        $this->fmErrorHandling($record);
+
+        foreach($data as $key => $value)
+        {
+            if(Input::get($key) == 'yes')
+            {
+                if($key == '')
+                {
+
+                }
+                $record->setField($data['field'], $data['value']);
+            }
+        }
+
+        $result = $record->commit();
+
+        $this->fmErrorHandling($result);
+
+        return true;
+    }
+
+    private function findFileMakerRecord($id)
+    {
+        $findCommand = $this->fm->newFindCommand($this->fmLayout);
+        $findCommand->addFindCriterion('ID', '='.$id);
+        $result = $findCommand->execute();
+
+        $this->fmErrorHandling($result);
+
+        $records = $result->getRecords();
+
+        $this->fmErrorHandling($records);
+
+        if(count($records) > 0){
+            $record = $records[0];
+            $this->fmRecordId = $record->getRecordId();
+            return $record;
+        }
+
+        throwException(new Exception("Kein Ergebnis gefunden."));
+        return false;
+    }
+
+    /**
+     * @param  FileMaker_Error|FileMaker_Result|FileMaker_Record[] $error
+     *
+     * @return bool
+     */
+    private function fmErrorHandling($error)
+    {
+        if(FileMaker::isError($error))
+        {
+            /**
+             * @var FileMaker_Error $error
+             */
+            throwException(new Exception($error->getMessage(), $error->getCode()));
+            return false;
+        }
+        return true;
     }
 
 }
