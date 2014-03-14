@@ -19,6 +19,7 @@
         )
     )
 )) }}
+    {{ Form::hidden('formpost', 'yes') }}
     <div class="row">
         <div class="col-md-9">
             <div class="btn-group">
@@ -41,7 +42,7 @@
                     <input type="checkbox" name="{{$key}}" value="yes" class="jsCheckbox">
                 </div>
                 <div class="col-md-3">{{$row['label']}}</div>
-                <div class="col-md-8">{{$row['value']}}</div>
+                <div class="col-md-8">{{nl2br(trim($row['value']))}}</div>
             </div>
         @endforeach
     </div>
