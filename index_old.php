@@ -39,6 +39,9 @@ $iroClient = (empty($_REQUEST['clientid'])) ? 0 : $_REQUEST['clientid'];
 
 006843358097055
 
+Fassbender: 5
+05QD4-PPAD0-R70AA
+
 
 */
 $clients = array(
@@ -57,6 +60,7 @@ $clients = array(
         'db_name' => 'iRO40PH1',
         'host' => 'http://host1.kon5.net/',
     ),
+
 );
 
 $_SESSION['client_id'] = $iroClient;
