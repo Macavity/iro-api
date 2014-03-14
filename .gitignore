@@ -1,2 +1,7 @@
 .idea
-bower_components
+.env.local.php
+.env.php
+.DS_Store
+Thumbs.db
+.sass-cache
+node_modules
