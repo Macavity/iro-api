@@ -20,6 +20,7 @@
     )
 )) }}
     {{ Form::hidden('formpost', 'yes') }}
+    {{ Form::hidden('xinglink', $searchQuery) }}
     <div class="row">
         <div class="col-md-9">
             <div class="btn-group">
@@ -42,7 +43,13 @@
                     <input type="checkbox" name="{{$key}}" value="yes" class="jsCheckbox">
                 </div>
                 <div class="col-md-3">{{$row['label']}}</div>
-                <div class="col-md-8">{{nl2br(trim($row['value']))}}</div>
+                <div class="col-md-8">
+                    @if($row['label'] == "Foto")
+                        <img src="{{nl2br(trim($row['value']))}}" style="max-height: 100px;"/>
+                    @else
+                        {{nl2br(trim($row['value']))}}
+                    @endif
+                </div>
             </div>
         @endforeach
     </div>

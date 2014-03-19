@@ -21,6 +21,8 @@ class PageController extends BaseController {
 
     private $serialNumber = "";
 
+    private $searchQuery = "";
+
     /**
      * @var FileMaker
      */
@@ -83,6 +85,8 @@ class PageController extends BaseController {
 
             $query = Input::get('xinglink','');
 
+            $isPostedForm = Input::get('formpost') == 'yes' ? true : false;
+
             /**
              * Form not filled?
              */
@@ -93,17 +97,24 @@ class PageController extends BaseController {
             }
             else
             {
-                $data = $this->processQuery($query, $oAuthClient);
+                $this->searchQuery = $query;
 
-                $isPostedForm = Input::get('formpost') == 'yes' ? true : false;
+                $data = $this->processQuery($this->searchQuery, $oAuthClient);
 
                 if($isPostedForm)
                 {
+                    $data = $this->processQuery($this->searchQuery, $oAuthClient);
+
                     if($this->importIntoFileMaker($data))
                     {
                         $this->showSuccess();
+                        return;
                     }
-
+                    else
+                    {
+                        $this->showData($data);
+                        return;
+                    }
                 }
                 else
                 {
@@ -111,8 +122,8 @@ class PageController extends BaseController {
                 }
             }
         }
-        catch(Exception $e){
-
+        catch(Exception $e)
+        {
             $messageString = $e->getMessage();
 
             if($e->getCode() > 0){
@@ -155,7 +166,7 @@ class PageController extends BaseController {
 
     public function showSuccess()
     {
-        $this->layout->content = View::make('success');
+        $this->layout->content = View::make('pages.success');
     }
 
     /**
@@ -213,15 +224,16 @@ class PageController extends BaseController {
     private function getLabel($key)
     {
         switch($key){
-            case 'PersonenID_Adressen::Ort': return "Adresse - Ort";
-            case 'PersonenID_Adressen::Land': return "Adresse - Land";
-            case 'PersonenID_Adressen::PLZ': return "Adresse - PLZ";
-            case 'PersonenID_Adressen::Strasse':  return "Adresse - Strasse";
-            case 'FON | PRIV': return "Privat - Telefon";
-            case 'MAIL | PRIV': return "Privat - E-Mail";
+            case 'PersonenID_Adressen::Ort': return "Adresse: Ort";
+            case 'PersonenID_Adressen::Land': return "Adresse: Land";
+            case 'PersonenID_Adressen::PLZ': return "Adresse: PLZ";
+            case 'PersonenID_Adressen::Strasse':  return "Adresse: Strasse";
+            case 'FON | PRIV': return "Privat: Telefon";
+            case 'MAIL | PRIV': return "Privat: E-Mail";
             case 'MOBIL': return "Mobil";
-            case 'FON | BIZ': return "Geschäft - Telefon";
-            case 'MAIL | BIZ': return "Geschäft - E-Mail";
+            case 'FON | BIZ': return "Geschäft: Telefon";
+            case 'MAIL | BIZ': return "Geschäft: E-Mail";
+            case 'Foto | Container': return "Foto";
 
             default:
                 return $key;
@@ -380,16 +392,17 @@ class PageController extends BaseController {
         }
 
         // Image
-        if(!empty($userResult->photo_urls)){
+        // TODO Save photo to container field (show photo in data)
+        /*if(!empty($userResult->photo_urls)){
             if(!empty($userResult->photo_urls->large))
             {
-                $data['photo'] = $userResult->photo_urls->large;
+                $data['Foto | Container'] = $userResult->photo_urls->large;
             }
             elseif(!empty($userResult->photo_urls->thumb))
             {
-                $data['photo'] = $userResult->photo_urls->thumb;
+                $data['Foto | Container'] = $userResult->photo_urls->thumb;
             }
-        }
+        }*/
 
         // Address
         if(!empty($userResult->private_address))
@@ -431,7 +444,7 @@ class PageController extends BaseController {
             $cleanedData[$key] = array(
                 'field' => $key,
                 'label' => $this->getLabel($key),
-                'value' => $value,
+                'value' => trim($value),
             );
         }
 
@@ -529,31 +542,33 @@ class PageController extends BaseController {
         $this->layout->content = View::make('pages.data')
             ->with(array(
                 'userName' => $this->xingUser->display_name,
+                'searchQuery' => $this->searchQuery,
                 'resultName' => $displayName,
                 'serial' => $this->serialNumber,
-                'fmId' => $this->fmRecordId,
+                'fmId' => $this->fmId,
                 'data' => $data,
             ));
     }
 
     private function importIntoFileMaker($data)
     {
-        // Remove display_name
-        unset($data['display_name']);
+        // Remove not existing fields
+        unset($data['display_name'],$data['photo']);
 
         $record = $this->fm->getRecordById($this->fmLayout, $this->fmRecordId);
 
         $this->fmErrorHandling($record);
 
-        foreach($data as $key => $value)
+        foreach($data as $key => $item)
         {
-            if(Input::get($key) == 'yes')
-            {
-                if($key == '')
-                {
+            $field = str_replace(' ', '_', $key);
 
+            if(Input::get($field) == 'yes')
+            {
+                if(!empty($item['field']))
+                {
+                    $record->setField($item['field'], $item['value']);
                 }
-                $record->setField($data['field'], $data['value']);
             }
         }
 
