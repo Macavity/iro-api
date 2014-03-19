@@ -17,6 +17,8 @@ class PageController extends BaseController {
 
     private $fmRecordId = 0;
 
+    private $fmId = 0;
+
     private $serialNumber = "";
 
     /**
@@ -110,7 +112,14 @@ class PageController extends BaseController {
             }
         }
         catch(Exception $e){
-            $this->showError($e->getMessage());
+
+            $messageString = $e->getMessage();
+
+            if($e->getCode() > 0){
+                $messageString .= "(".$e->getCode().")";
+            }
+
+            $this->showError($messageString);
             return;
         }
 
@@ -127,7 +136,7 @@ class PageController extends BaseController {
 	{
         $this->layout->content = View::make('pages.index')
             ->with('userName', $this->xingUser->display_name)
-            ->with('fmId', $this->fmRecordId)
+            ->with('fmId', $this->fmId)
             ->with('serial', $this->serialNumber);
 	}
 
@@ -146,8 +155,7 @@ class PageController extends BaseController {
 
     public function showSuccess()
     {
-        $this->layout->content = View::make('success')
-            ->with();
+        $this->layout->content = View::make('success');
     }
 
     /**
@@ -224,6 +232,7 @@ class PageController extends BaseController {
      * @param                                $query
      * @param Paneon\OAuthClient\OAuthClient $oAuthClient
      *
+     * @throws Exception
      * @return array
      */
     private function processQuery($query, $oAuthClient)
@@ -256,7 +265,7 @@ class PageController extends BaseController {
         if($success == false)
         {
             Log::error("Failed to connect to  XING API", array('context' => 'PageController.processQuery'));
-            throwException(new Exception("Failed to connect to Xing Api"));
+            throw(new Exception("Failed to connect to Xing Api"));
         }
 
         /**
@@ -267,7 +276,7 @@ class PageController extends BaseController {
         if($userResult === false)
         {
             Log::error("Failed to connect to  XING API", array('context' => 'PageController.processQuery', 'more' => 'No user found'));
-            throwException(new Exception("Failed to connect to Xing API"));
+            throw(new Exception("Failed to connect to Xing API"));
         }
 
         //dd($userResult);
@@ -502,19 +511,25 @@ class PageController extends BaseController {
 
     private function initializeFileMaker()
     {
-        $this->fm = new FileMaker($this->client->db_name, $this->client->host, $this->client->fm_user, $this->client->fm_password);
+
+        $this->fm = new FileMaker($this->client->db_name, 'http://'.$this->client->host, $this->client->fm_user, $this->client->fm_password);
 
         if(FileMaker::isError($this->fm))
         {
-            throwException(new Exception("Es konnte keine Verbindung mit der iRO Datenbank hergestellt werden."));
+            throw(new Exception("Es konnte keine Verbindung mit der iRO Datenbank hergestellt werden."));
         }
     }
 
     private function showData($data)
     {
+        $displayName = $data['display_name']['value'];
+
+        unset($data['display_name']);
+
         $this->layout->content = View::make('pages.data')
             ->with(array(
                 'userName' => $this->xingUser->display_name,
+                'resultName' => $displayName,
                 'serial' => $this->serialNumber,
                 'fmId' => $this->fmRecordId,
                 'data' => $data,
@@ -523,6 +538,9 @@ class PageController extends BaseController {
 
     private function importIntoFileMaker($data)
     {
+        // Remove display_name
+        unset($data['display_name']);
+
         $record = $this->fm->getRecordById($this->fmLayout, $this->fmRecordId);
 
         $this->fmErrorHandling($record);
@@ -561,16 +579,18 @@ class PageController extends BaseController {
         if(count($records) > 0){
             $record = $records[0];
             $this->fmRecordId = $record->getRecordId();
+            $this->fmId = $record->getField('ID');
             return $record;
         }
 
-        throwException(new Exception("Kein Ergebnis gefunden."));
+        throw(new Exception("Kein Ergebnis gefunden."));
         return false;
     }
 
     /**
      * @param  FileMaker_Error|FileMaker_Result|FileMaker_Record[] $error
      *
+     * @throws Exception
      * @return bool
      */
     private function fmErrorHandling($error)
@@ -580,7 +600,7 @@ class PageController extends BaseController {
             /**
              * @var FileMaker_Error $error
              */
-            throwException(new Exception($error->getMessage(), $error->getCode()));
+            throw(new Exception($error->getMessage(), $error->getCode()));
             return false;
         }
         return true;
