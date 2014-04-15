@@ -1,6 +1,6 @@
 <?php
 
-error_reporting(E_ALL ^ E_DEPRECATED ^ E_STRICT);
+error_reporting(E_ALL ^ E_DEPRECATED ^ E_STRICT ^ E_NOTICE);
 
 return array(
 
@@ -15,7 +15,7 @@ return array(
 	|
 	*/
 
-	'debug' => true,
+	'debug' => false,
 
 	/*
 	|--------------------------------------------------------------------------
@@ -28,7 +28,7 @@ return array(
 	|
 	*/
 
-	'url' => 'http://localhost',
+	'url' => 'http://api-dev.paneon.de',
 
 	/*
 	|--------------------------------------------------------------------------

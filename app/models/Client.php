@@ -15,23 +15,23 @@ class Client extends Eloquent {
 
 	protected $guarded = array();
 
-	public static $rules = [
+	public static $rules = array(
         'name' => 'required',
         'host' => 'required',
         'db_name' => 'required',
         'serial' => 'required',
         'fm_user' => 'required',
         'fm_password' => 'required',
-    ];
+    );
 
-    public static $fieldLabels = [
+    public static $fieldLabels = array(
         'name' => 'Name',
         'host' => 'Host',
         'db_name' => 'Datenbankname',
         'serial' => 'Seriennummer',
         'fm_user' => 'FM Benutzer',
         'fm_password' => 'FM Passwort',
-    ];
+    );
 
 
     /**

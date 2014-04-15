@@ -16,18 +16,18 @@
 // LOGIN SECTION =================================
 // ===============================================
 // show the login page
-Route::get('login', [
+Route::get('login', array(
     'uses' => 'PageController@showLogin'
-]);
+));
 
 // process the login
-Route::post('login', [
+Route::post('login', array(
     'uses' => 'PageController@doLogin'
-]);
+));
 
-Route::get('logout', [
+Route::get('logout', array(
     'uses' => 'PageController@doLogout'
-]);
+));
 
 // ===============================================
 // ADMIN SECTION =================================
