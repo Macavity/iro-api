@@ -19,6 +19,13 @@ class PageController extends BaseController {
 
     private $fmId = 0;
 
+    /**
+     * Filled from the FileMaker database field, is used as a placeholder if not empty
+     *
+     * @var string
+     */
+    private $fmXingLink = "";
+
     private $serialNumber = "";
 
     private $searchQuery = "";
@@ -130,7 +137,7 @@ class PageController extends BaseController {
             $messageString = $e->getMessage();
 
             if($e->getCode() > 0){
-                $messageString .= "<!-- (Code: ".$e->getCode().", Datei: ".$e->getFile().", Zeile: " .$e->getLine()." -->";
+                $messageString .= "< !-- (Code: ".$e->getCode().", Datei: ".$e->getFile().", Zeile: " .$e->getLine()." -->";
 
             }
 
@@ -152,6 +159,7 @@ class PageController extends BaseController {
         $this->layout->content = View::make('pages.index')
             ->with('userName', $this->xingUser->display_name)
             ->with('fmId', $this->fmId)
+            ->with('fmXingLink', $this->fmXingLink)
             ->with('serial', $this->serialNumber);
 	}
 
@@ -159,11 +167,15 @@ class PageController extends BaseController {
     {
         if(empty($message))
         {
-            $this->layout->content = View::make('error');
+            $this->layout->content = View::make('error')
+                ->with('fmId', $this->fmId)
+                ->with('serial', $this->serialNumber);
         }
         else
         {
             $this->layout->content = View::make('error')
+                ->with('fmId', $this->fmId)
+                ->with('serial', $this->serialNumber)
                 ->with('message', $message);
         }
     }
@@ -606,10 +618,16 @@ class PageController extends BaseController {
             $record = $records[0];
             $this->fmRecordId = $record->getRecordId();
             $this->fmId = $record->getField('ID');
+
+            $xingLink = trim($record->getField('XING'));
+
+            $this->fmXingLink = (empty($xingLink)) ? "" : $xingLink;
+
             return $record;
         }
 
         throw(new Exception("Kein Ergebnis gefunden."));
+
         return false;
     }
 
