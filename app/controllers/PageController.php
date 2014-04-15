@@ -79,6 +79,9 @@ class PageController extends BaseController {
         }
 
         try {
+
+            error_reporting(E_ALL ^ E_DEPRECATED ^ E_STRICT ^ E_NOTICE);
+
             $this->initializeFileMaker();
 
             $this->findFileMakerRecord($fmId);
@@ -127,7 +130,8 @@ class PageController extends BaseController {
             $messageString = $e->getMessage();
 
             if($e->getCode() > 0){
-                $messageString .= "(".$e->getCode().")";
+                $messageString .= "<!-- (Code: ".$e->getCode().", Datei: ".$e->getFile().", Zeile: " .$e->getLine()." -->";
+
             }
 
             $this->showError($messageString);
@@ -182,10 +186,10 @@ class PageController extends BaseController {
      */
     public function doLogin()
     {
-        $rules = [
+        $rules = array(
             'email'     => 'required|email',
             'password'  => 'required'
-        ];
+        );
 
         $validator = Validator::make(Input::all(), $rules);
 
@@ -197,10 +201,10 @@ class PageController extends BaseController {
         }
         else
         {
-            $userdata = [
+            $userdata = array(
                 'email'     => Input::get('email'),
                 'password'  => Input::get('password'),
-            ];
+            );
 
             if(Auth::attempt($userdata))
             {
@@ -567,7 +571,14 @@ class PageController extends BaseController {
             {
                 if(!empty($item['field']))
                 {
-                    $record->setField($item['field'], $item['value']);
+                    $newValue = $item['value'];
+
+                    if($item['field'] == 'Notiz')
+                    {
+                        $newValue = $record->getField($item['field']) .
+                            "\n===============\nXING Import: \n\n" . $newValue."\n===============\n";
+                    }
+                    $record->setField($item['field'], $newValue);
                 }
             }
         }
