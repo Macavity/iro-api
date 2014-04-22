@@ -1,6 +1,6 @@
 <?php
 
-if(false){
+if(true){
     // Production
     return array(
 
