@@ -143,7 +143,7 @@ class OAuthClient
 	</variable>
 {/metadocument}
 */
-	var $debug = false;
+	var $debug = true;
 
 /*
 {metadocument}
