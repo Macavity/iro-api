@@ -69,7 +69,20 @@ class PageController extends BaseController {
          * Login to Xing Done
          * =============================================
          */
-        $this->doXingLogin($oAuthClient);
+        try{
+            $this->doXingLogin($oAuthClient);
+        }
+        catch(Exception $e)
+        {
+            $messageString = $e->getMessage();
+
+            if($e->getCode() > 0){
+                $messageString .= "<!-- (Code: ".$e->getCode().", Datei: ".$e->getFile().", Zeile: " .$e->getLine()." -->";
+            }
+
+            $this->showError($messageString);
+            return;
+        }
 
         // Set Display Name of logged in user
         $this->layout->userName = $this->xingUser->display_name;
@@ -137,7 +150,7 @@ class PageController extends BaseController {
             $messageString = $e->getMessage();
 
             if($e->getCode() > 0){
-                $messageString .= "< !-- (Code: ".$e->getCode().", Datei: ".$e->getFile().", Zeile: " .$e->getLine()." -->";
+                $messageString .= "<!-- (Code: ".$e->getCode().", Datei: ".$e->getFile().", Zeile: " .$e->getLine()." -->";
 
             }
 
@@ -498,6 +511,7 @@ class PageController extends BaseController {
     /**
      * @param Paneon\OAuthClient\OAuthClient $oAuthClient
      *
+     * @throws Exception
      * @return null
      */
     private function doXingLogin($oAuthClient)
@@ -515,6 +529,9 @@ class PageController extends BaseController {
                         'GET', array(), array('FailOnAccessError'=>true), $user);
                 }
             }
+            else{
+                throw(new Exception("Es konnte keine Verbindung zu XING hergestellt werden."));
+            }
             $success = $oAuthClient->Finalize($success);
         }
 
@@ -529,13 +546,12 @@ class PageController extends BaseController {
              * @var Object $user
              */
             $this->xingUser = $user->users[0];
+            return $user;
         }
         else
         {
-            Redirect::to("404");
+            throw(new Exception("Es konnte keine Verbindung zu XING hergestellt werden."));
         }
-
-        return $user;
     }
 
     private function initializeFileMaker()
