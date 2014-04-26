@@ -77,7 +77,7 @@ class PageController extends BaseController {
             $messageString = $e->getMessage();
 
             if($e->getCode() > 0){
-                $messageString .= "<!-- (Code: ".$e->getCode().", Datei: ".$e->getFile().", Zeile: " .$e->getLine()." -->";
+                $messageString = "Fehler: ".$e->getCode().$messageString. "<!-- (Datei: ".$e->getFile().", Zeile: " .$e->getLine()." -->";
             }
 
             $this->showError($messageString);
@@ -150,7 +150,7 @@ class PageController extends BaseController {
             $messageString = $e->getMessage();
 
             if($e->getCode() > 0){
-                $messageString .= "<!-- (Code: ".$e->getCode().", Datei: ".$e->getFile().", Zeile: " .$e->getLine()." -->";
+                $messageString = "Fehler: ".$e->getCode().$messageString."<!-- Datei: ".$e->getFile().", Zeile: " .$e->getLine()." -->";
 
             }
 
