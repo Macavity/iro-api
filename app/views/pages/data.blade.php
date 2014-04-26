@@ -11,6 +11,14 @@
 <div class="row">
     <div class="col-md-12"><h3>Gefundenes Profil: {{ $resultName }}</h3></div>
 </div>
+
+@if($differentLastName)
+<div class="alert alert-warning">
+    Der Nachname des gefundenen Profils stimmt nicht mit dem Nachnamen in der Datenbank überein.<br/>
+    Bitte überprüfen Sie ob Sie im richtigen Datensatz sind.
+</div>
+@endif
+
 {{ Form::open(array(
     'url' => route(
         'form', array(
