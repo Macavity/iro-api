@@ -530,7 +530,8 @@ class PageController extends BaseController {
                 }
             }
             else{
-                throw(new Exception("Es konnte keine Verbindung zu XING hergestellt werden."));
+                dd($oAuthClient->error);
+                throw(new Exception("Fehler 534: Es konnte keine Verbindung zu XING hergestellt werden."));
             }
             $success = $oAuthClient->Finalize($success);
         }
@@ -550,7 +551,8 @@ class PageController extends BaseController {
         }
         else
         {
-            throw(new Exception("Es konnte keine Verbindung zu XING hergestellt werden."));
+            dd($oAuthClient);
+            throw(new Exception("Fehler 554 : Es konnte keine Verbindung zu XING hergestellt werden."));
         }
     }
 
