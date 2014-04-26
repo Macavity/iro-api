@@ -20,6 +20,11 @@ class PageController extends BaseController {
     private $fmId = 0;
 
     /**
+     * @var FileMaker_Record
+     */
+    private $fmRecord = null;
+
+    /**
      * Filled from the FileMaker database field, is used as a placeholder if not empty
      *
      * @var string
@@ -104,7 +109,7 @@ class PageController extends BaseController {
 
             $this->initializeFileMaker();
 
-            $this->findFileMakerRecord($fmId);
+            $this->fmRecord = $this->findFileMakerRecord($fmId);
 
             $query = Input::get('xinglink','');
 
@@ -573,6 +578,13 @@ class PageController extends BaseController {
 
         unset($data['display_name']);
 
+        $differentLastName = false;
+
+        // Check FM Data: Last Name
+        if(!empty($data['Nachname']) && $this->fmRecord->getField('Nachname') != $data['Nachname']){
+            $differentLastName = true;
+        }
+
         $this->layout->content = View::make('pages.data')
             ->with(array(
                 'userName' => $this->xingUser->display_name,
@@ -581,6 +593,7 @@ class PageController extends BaseController {
                 'serial' => $this->serialNumber,
                 'fmId' => $this->fmId,
                 'data' => $data,
+                'differentLastName' => $differentLastName,
             ));
     }
 
@@ -620,6 +633,12 @@ class PageController extends BaseController {
         return true;
     }
 
+    /**
+     * @param $id
+     *
+     * @return bool|FileMaker_Record
+     * @throws Exception
+     */
     private function findFileMakerRecord($id)
     {
         $findCommand = $this->fm->newFindCommand($this->fmLayout);

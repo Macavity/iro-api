@@ -44,7 +44,7 @@ Route::group(array('prefix' => 'admin', 'before' => 'auth'), function()
 });
 
 // First Page (Form)
-Route::any('/{serial}/{fmId}/', array(
+Route::any('/{serial}/{fmId}', array(
         'as' => 'form',
         'uses' => 'PageController@index'
     ))
