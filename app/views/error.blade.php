@@ -4,7 +4,7 @@
 <div class="front-page">
     <div class="row">
         <div class="col-md-1 pull-right">
-            <a href="/{{$serial}}/{{$fmId}}"><i class="glyphicon glyphicon-refresh"></i></a>
+            <a href="/{{$serial}}/{{$fmId}}/"><i class="glyphicon glyphicon-refresh"></i></a>
         </div>
     </div>
     <div class="row">
