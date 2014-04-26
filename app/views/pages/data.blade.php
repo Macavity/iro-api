@@ -2,7 +2,7 @@
 @section('content')
 <div class="row">
     <div class="btn-group">
-        <a href="/public/index.php?form=xing" class="btn btn-primary">
+        <a href="{{ route('form', array('serial' => $serial, 'fmId' => $fmId ) ); }}" class="btn btn-primary">
             <i class="glyphicon glyphicon-chevron-left"></i> Neue Suche
         </a>
     </div>
