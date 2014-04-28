@@ -200,7 +200,9 @@ class PageController extends BaseController {
 
     public function showSuccess()
     {
-        $this->layout->content = View::make('pages.success');
+        $this->layout->content = View::make('pages.success')
+            ->with('fmId', $this->fmId)
+            ->with('serial', $this->serialNumber);
     }
 
     /**
@@ -287,6 +289,12 @@ class PageController extends BaseController {
         {
             $query = substr($query, strpos($query, "profile/")+8);
         }
+        elseif(substr_count($query,"profiles/") > 0)
+        {
+            $query = substr($query, strpos($query, "profiles/")+9);
+        }
+        //echo $query;
+
 
         /*
          *  Alexander_Pape3?someparameter=somevalue
@@ -581,7 +589,8 @@ class PageController extends BaseController {
         $differentLastName = false;
 
         // Check FM Data: Last Name
-        if(!empty($data['Nachname']) && $this->fmRecord->getField('Nachname') != $data['Nachname']){
+        $fmLastName = $this->fmRecord->getField('Nachname');
+        if(!empty($data['Nachname']) && !empty($fmLastName) && $fmLastName != $data['Nachname']['value']){
             $differentLastName = true;
         }
 
