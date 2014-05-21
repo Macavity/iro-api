@@ -43,6 +43,31 @@ Route::group(array('prefix' => 'admin', 'before' => 'auth'), function()
     Route::resource('users', 'UsersController');
 });
 
+// ===============================================
+// DATA SECTION ==================================
+// ===============================================
+Route::group(array('prefix' => 'data'), function()
+{
+    Route::get('/{serial}/jobs/all', array(
+        'uses' => 'DataController@jobListAll'
+        ))
+        ->where('serial', '[A-Za-z\-\d+]+');
+
+    Route::get('/{serial}/jobs/{start}/{count}', array(
+        'uses' => 'DataController@jobList'
+        ))
+        ->where('serial', '[A-Za-z\-\d+]+')
+        ->where('start', '[\d]+')
+        ->where('count', '[\d]+');
+
+    Route::get('/{serial}/job-detail/{jobId}', array(
+        'uses' => 'DataController@jobDetail'
+    ))
+        ->where('serial', '[A-Za-z\-\d+]+')
+        ->where('jobId', '[\d]+');
+
+});
+
 // First Page (Form)
 Route::any('/{serial}/{fmId}', array(
         'as' => 'form',
