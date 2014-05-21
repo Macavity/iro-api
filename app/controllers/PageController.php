@@ -257,6 +257,84 @@ class PageController extends BaseController {
         return Redirect::to('login');
     }
 
+    public function showXingLogin(){
+
+        $oAuthClient = $this->getOAuthClient();
+
+        /*
+         * =============================================
+         * Login to Xing Done
+         * =============================================
+         */
+        try{
+            $this->doXingLogin($oAuthClient);
+        }
+        catch(Exception $e)
+        {
+            $messageString = $e->getMessage();
+
+            if($e->getCode() > 0){
+                $messageString = "Fehler: ".$e->getCode().$messageString. "<!-- (Datei: ".$e->getFile().", Zeile: " .$e->getLine()." -->";
+            }
+
+            $this->showError($messageString);
+            return;
+        }
+    }
+
+    public function checkXingSession(){
+        $oAuthClient = $this->getOAuthClient();
+
+        $sessionState = null;
+        $message = "";
+
+        try {
+            $user = null;
+
+            if(($success = $oAuthClient->Initialize()))
+            {
+                if(($success = $oAuthClient->Process()))
+                {
+                    if(strlen($oAuthClient->access_token))
+                    {
+                        $success = $oAuthClient->CallAPI(
+                            'https://api.xing.com/v1/users/me',
+                            'GET', array(), array('FailOnAccessError'=>true), $user);
+                    }
+                }
+                else{
+                    throw(new Exception("Fehler ".__LINE__.": Es konnte keine Verbindung zu XING hergestellt werden."));
+                }
+                $success = $oAuthClient->Finalize($success);
+            }
+
+            if($oAuthClient->exit)
+            {
+                throw(new Exception("Fehler ".__LINE__.": oAuth Exit"));
+            }
+            else {
+                if($success)
+                {
+                    $sessionState = true;
+                }
+                else
+                {
+                    throw(new Exception("Fehler ".__LINE__.": No Success"));
+                }
+            }
+
+        }
+        catch(Exception $e){
+            $sessionState = false;
+            return Response::json(array(
+                'r' => $sessionState,
+                't' => $e->getMessage(),
+            ));
+        }
+
+        return Response::json(array('r' => $sessionState));
+    }
+
     private function getLabel($key)
     {
         switch($key){
