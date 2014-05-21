@@ -31,14 +31,7 @@ class PageController extends BaseController {
      */
     private $fmXingLink = "";
 
-    private $serialNumber = "";
-
     private $searchQuery = "";
-
-    /**
-     * @var FileMaker
-     */
-    private $fm = null;
 
     /**
      * The User who logged into Xing
@@ -47,11 +40,6 @@ class PageController extends BaseController {
      * @property $display_name
      */
     private $xingUser = null;
-
-    /**
-     * @var Client
-     */
-    private $client = null;
 
     /**
      * Display a listing of the resource.
@@ -64,8 +52,9 @@ class PageController extends BaseController {
 	public function index($serial, $fmId)
 	{
 
-        $this->serialNumber = $serial;
         $this->fmRecordId = $fmId;
+
+        $this->initClient($serial);
 
         $oAuthClient = $this->getOAuthClient();
 
@@ -92,16 +81,6 @@ class PageController extends BaseController {
         // Set Display Name of logged in user
         $this->layout->userName = $this->xingUser->display_name;
 
-        /*
-         * Find the Client
-         */
-        $this->client = Client::where('serial', '=', $this->serialNumber)->first();
-
-        if(empty($this->client))
-        {
-            $this->showError("Seriennummer ungültig.");
-            return;
-        }
 
         try {
 
@@ -180,23 +159,6 @@ class PageController extends BaseController {
             ->with('fmXingLink', $this->fmXingLink)
             ->with('serial', $this->serialNumber);
 	}
-
-    public function showError($message = "")
-    {
-        if(empty($message))
-        {
-            $this->layout->content = View::make('error')
-                ->with('fmId', $this->fmId)
-                ->with('serial', $this->serialNumber);
-        }
-        else
-        {
-            $this->layout->content = View::make('error')
-                ->with('fmId', $this->fmId)
-                ->with('serial', $this->serialNumber)
-                ->with('message', $message);
-        }
-    }
 
     public function showSuccess()
     {
@@ -569,17 +531,6 @@ class PageController extends BaseController {
         }
     }
 
-    private function initializeFileMaker()
-    {
-
-        $this->fm = new FileMaker($this->client->db_name, 'http://'.$this->client->host, $this->client->fm_user, $this->client->fm_password);
-
-        if(FileMaker::isError($this->fm))
-        {
-            throw(new Exception("Es konnte keine Verbindung mit der iRO Datenbank hergestellt werden."));
-        }
-    }
-
     private function showData($data)
     {
         $displayName = $data['display_name']['value'];
@@ -675,25 +626,6 @@ class PageController extends BaseController {
         throw(new Exception("Kein Ergebnis gefunden."));
 
         return false;
-    }
-
-    /**
-     * @param  FileMaker_Error|FileMaker_Result|FileMaker_Record[] $error
-     *
-     * @throws Exception
-     * @return bool
-     */
-    private function fmErrorHandling($error)
-    {
-        if(FileMaker::isError($error))
-        {
-            /**
-             * @var FileMaker_Error $error
-             */
-            throw(new Exception($error->getMessage(), $error->getCode()));
-            return false;
-        }
-        return true;
     }
 
 }

@@ -4,32 +4,6 @@ module.exports = function(grunt) {
     grunt.initConfig({
         pkg: grunt.file.readJSON('package.json'),
 
-        /*
-         * JS Hint spellchecking
-         * Documentation: https://github.com/gruntjs/grunt-contrib-jshint
-         */
-        jshint: {
-            options: {
-
-                force: true,
-
-                // Enforcing
-                curly: false,
-                browser: true,
-                eqeqeq: false,
-
-                // Relaxing
-                eqnull: true,
-                scripturl: true,
-
-                ignores: [
-             ]
-            },
-
-            files: [
-            ]
-        },
-
         copy: {
             main: {
                 files: [
