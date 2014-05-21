@@ -51,6 +51,10 @@ Route::any('/{serial}/{fmId}', array(
     ->where('serial', '[A-Za-z\-\d+]+')
     ->where('fmId', '[\d+]+');
 
+Route::get('/get/xingsession', 'PageController@checkXingSession');
+
+Route::get('/xinglogin', 'PageController@showXingLogin');
+
 Route::get('/debug/fm', function(){
     include_once(base_path().'/app/libraries/filemaker-12/FileMaker.php');
     $fm = new FileMaker('K5_RO','http://host1.kon5.net/','web_pape','xs4web_pape');
