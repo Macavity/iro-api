@@ -1,32 +1,48 @@
 <?php
 
-class PageController extends BaseController {
+class XingController extends BaseController {
+
+    protected $layout = "layouts.xing";
 
     /**
-     * Filled from the FileMaker database field, is used as a placeholder if not empty
+     * The User who logged into Xing
      *
-     * @var string
+     * @var Object
+     * @property $display_name
      */
-    private $fmXingLink = "";
+    private $xingUser = null;
+
+    private $errorMessage = "";
 
     private $searchQuery = "";
 
     /**
-     * Display a listing of the resource.
-     *
-     * @param $serial   string
-     * @param $fmId     number
-     *
-     * @return Response
+     * @var Paneon\OAuthClient\OAuthClient
      */
-	public function index($serial, $fmId)
-	{
+    private $oAuthClient = null;
 
-        $this->fmRecordId = $fmId;
 
-        $this->initClient($serial);
+    const XING_IMPORT_DONE = 1;
 
-        $oAuthClient = $this->getOAuthClient();
+    const XING_FIELD_EMPTY = 100;
+
+    const XING_NOT_LOGGED_IN = 101;
+
+    public function showIndex(){
+
+        $loginStatus = $this->checkXingSession();
+
+        if($loginStatus){
+            $this->layout->content = View::make('xing.done');
+        }
+        else{
+            Redirect::action('XingController@showXingLogin');
+            return;
+        }
+
+    }
+
+    public function showXingLogin(){
 
         /*
          * =============================================
@@ -34,7 +50,17 @@ class PageController extends BaseController {
          * =============================================
          */
         try{
-            $this->doXingLogin($oAuthClient);
+            $this->doXingLogin();
+
+            $success = $this->oAuthClient->CallAPI(
+                'https://api.xing.com/v1/users/me',
+                'GET', array(), array('FailOnAccessError' => true), $result);
+
+            if($success == false)
+            {
+                Log::error("Failed to connect to XING API", array('context' => 'PageController.processQuery'));
+                throw(new Exception("Failed to connect to Xing Api"));
+            }
         }
         catch(Exception $e)
         {
@@ -44,178 +70,196 @@ class PageController extends BaseController {
                 $messageString = "Fehler: ".$e->getCode().$messageString. "<!-- (Datei: ".$e->getFile().", Zeile: " .$e->getLine()." -->";
             }
 
-            $this->showError($messageString);
-            return;
+            return Response::make($this::XING_NOT_LOGGED_IN);
         }
 
-        // Set Display Name of logged in user
-        $this->layout->userName = $this->xingUser->display_name;
+        $this->layout->content = View::make('xing.done');
 
+    }
+
+    public function doSearch($serial, $fmId){
 
         try {
-
-            error_reporting(E_ALL ^ E_DEPRECATED ^ E_STRICT ^ E_NOTICE);
-
-            $this->initializeFileMaker();
-
-            $this->fmRecord = $this->findFileMakerRecord($fmId);
-
-            $query = Input::get('xinglink','');
-
-            $isPostedForm = Input::get('formpost') == 'yes' ? true : false;
-
-            /**
-             * Form not filled?
-             */
-            if(empty($query))
-            {
-                $this->showForm();
-                return;
-            }
-            else
-            {
-                $this->searchQuery = $query;
-
-                $data = $this->processQuery($this->searchQuery, $oAuthClient);
-
-                if($isPostedForm)
-                {
-                    $data = $this->processQuery($this->searchQuery, $oAuthClient);
-
-                    if($this->importIntoFileMaker($data))
-                    {
-                        $this->showSuccess();
-                        return;
-                    }
-                    else
-                    {
-                        $this->showData($data);
-                        return;
-                    }
-                }
-                else
-                {
-                    $this->showData($data);
-                }
-            }
+            $this->doXingLogin();
         }
-        catch(Exception $e)
-        {
-            $messageString = $e->getMessage();
-
-            if($e->getCode() > 0){
-                $messageString = "Fehler: ".$e->getCode().$messageString."<!-- Datei: ".$e->getFile().", Zeile: " .$e->getLine()." -->";
-
-            }
-
-            $this->showError($messageString);
-            return;
+        catch(Exception $e){
+            return Response::make($this::XING_NOT_LOGGED_IN);
         }
 
+        error_reporting(E_ALL ^ E_DEPRECATED ^ E_STRICT ^ E_NOTICE);
 
+        $this->initClient($serial);
 
-	}
+        $this->initializeFileMaker();
 
-	/**
-	 * Show the form for creating a new resource.
-	 *
-	 * @return Response
-	 */
-	public function showForm()
-	{
-        $this->layout->content = View::make('pages.index')
-            ->with('userName', $this->xingUser->display_name)
-            ->with('fmId', $this->fmId)
-            ->with('fmXingLink', $this->fmXingLink)
-            ->with('serial', $this->serialNumber);
-	}
+        $this->fmRecord = $this->findFileMakerRecord($fmId);
 
-    public function showSuccess()
-    {
-        $this->layout->content = View::make('pages.success')
-            ->with('fmId', $this->fmId)
-            ->with('serial', $this->serialNumber);
-    }
+        $this->searchQuery = $this->fmRecord->getField('XING');
 
-    /**
-     * Show Login Form
-     */
-    public function showLogin()
-    {
-        $this->layout->content = View::make('pages.login');
-    }
+        $isPostedForm = Input::get('formpost') == 'yes' ? true : false;
 
-    /**
-     * Process the Login
-     */
-    public function doLogin()
-    {
-        $rules = array(
-            'email'     => 'required|email',
-            'password'  => 'required'
-        );
-
-        $validator = Validator::make(Input::all(), $rules);
-
-        if($validator->fails())
+        /**
+         * Form not filled?
+         */
+        if(empty($this->searchQuery))
         {
-            return Redirect::to('login')
-                ->withErrors($validator)
-                ->withInput(Input::only('email'));
+            return Response::make($this::XING_FIELD_EMPTY);
         }
         else
         {
-            $userdata = array(
-                'email'     => Input::get('email'),
-                'password'  => Input::get('password'),
-            );
+            $data = $this->processQuery($this->searchQuery);
 
-            if(Auth::attempt($userdata))
+            return Response::make($this::XING_IMPORT_DONE);
+        }
+    }
+
+    public function statusRaw(){
+
+
+        $status = $this->checkXingSession();
+
+        echo ($status ? "1" : "0");
+    }
+
+    public function checkXingSession(){
+
+        try {
+            $this->doXingLogin();
+
+            $success = $this->oAuthClient->CallAPI(
+                'https://api.xing.com/v1/users/me',
+                'GET', array(), array('FailOnAccessError' => true), $result);
+
+            if($success == false)
             {
-                return Redirect::to('admin');
+                Log::error("Failed to connect to XING API", array('context' => 'PageController.processQuery'));
+                throw(new Exception("Failed to connect to Xing Api"));
             }
-            else
+
+            return true;
+        }
+        catch(Exception $e){
+            return false;
+        }
+        /*
+        $this->oAuthClient = $this->getOAuthClient(action('XingController@showXingLogin'));
+
+        $sessionState = null;
+        $user = null;
+
+        try {
+
+            if(($success = $this->oAuthClient->Initialize()))
             {
-                return Redirect::to('login')
-                    ->withInput(Input::only('email'));
+                if(($success = $this->oAuthClient->Process()))
+                {
+                    if(strlen($this->oAuthClient->access_token))
+                    {
+                        $success = $this->oAuthClient->CallAPI(
+                            'https://api.xing.com/v1/users/me',
+                            'GET', array(), array('FailOnAccessError'=>true), $user);
+                    }
+                }
+                else{
+                    throw(new Exception("Fehler ".__LINE__.": Es konnte keine Verbindung zu XING hergestellt werden."));
+                }
+                $success = $this->oAuthClient->Finalize($success);
             }
+
+            if($this->oAuthClient->exit)
+            {
+
+
+                throw(new Exception("Fehler ".__LINE__.": oAuth Exit"));
+            }
+            else {
+                if($success)
+                {
+                    $sessionState = true;
+                }
+                else
+                {
+                    throw(new Exception("Fehler ".__LINE__.": No Success"));
+                }
+            }
+
+        }
+        catch(Exception $e){
+            $sessionState = false;
+            $this->errorMessage = $e->getMessage();
+            return $sessionState;
         }
 
+        return $sessionState;*/
     }
 
-    public function doLogout()
-    {
-        Auth::logout();
-        return Redirect::to('login');
+    public function jsonXingLoggedIn(){
+        $check = $this->checkXingSession();
+
+        return Response::json(array(
+            'r' => $check,
+            't' => empty($this->errorMessage) ? "" : $this->errorMessage,
+            //'o' => print_r($this->oAuthClient, true),
+        ));
     }
 
-    private function getLabel($key)
+    /**
+     *
+     * @throws Exception
+     * @return null
+     */
+    private function doXingLogin()
     {
-        switch($key){
-            case 'PersonenID_Adressen::Ort': return "Adresse: Ort";
-            case 'PersonenID_Adressen::Land': return "Adresse: Land";
-            case 'PersonenID_Adressen::PLZ': return "Adresse: PLZ";
-            case 'PersonenID_Adressen::Strasse':  return "Adresse: Strasse";
-            case 'FON | PRIV': return "Privat: Telefon";
-            case 'MAIL | PRIV': return "Privat: E-Mail";
-            case 'MOBIL': return "Mobil";
-            case 'FON | BIZ': return "Geschäft: Telefon";
-            case 'MAIL | BIZ': return "Geschäft: E-Mail";
-            case 'Foto | Container': return "Foto";
+        $user = null;
 
-            default:
-                return $key;
+        if($this->oAuthClient == null){
+            $this->oAuthClient = $this->getOAuthClient(action('XingController@showXingLogin'));
+        }
+
+        if(($success = $this->oAuthClient->Initialize()))
+        {
+            if(($success = $this->oAuthClient->Process()))
+            {
+                if(strlen($this->oAuthClient->access_token))
+                {
+                    $success = $this->oAuthClient->CallAPI(
+                        'https://api.xing.com/v1/users/me',
+                        'GET', array(), array('FailOnAccessError'=>true), $user);
+                }
+            }
+            else{
+                dd($this->oAuthClient->error);
+                throw(new Exception("Fehler 534: Es konnte keine Verbindung zu XING hergestellt werden."));
+            }
+            $success = $this->oAuthClient->Finalize($success);
+        }
+
+        if($this->oAuthClient->exit)
+        {
+            exit;
+        }
+
+        if($success)
+        {
+            /**
+             * @var Object $user
+             */
+            $this->xingUser = $user->users[0];
+            return $user;
+        }
+        else
+        {
+            throw(new Exception("Fehler 554 : Es konnte keine Verbindung zu XING hergestellt werden."));
         }
     }
 
     /**
      * @param                                $query
-     * @param Paneon\OAuthClient\OAuthClient $oAuthClient
      *
      * @throws Exception
      * @return array
      */
-    private function processQuery($query, $oAuthClient)
+    private function processQuery($query)
     {
         if(substr_count($query,"profile/") > 0)
         {
@@ -244,13 +288,13 @@ class PageController extends BaseController {
          */
         $result = null;
 
-        $success = $oAuthClient->CallAPI(
+        $success = $this->oAuthClient->CallAPI(
             'https://api.xing.com/v1/users/'.$query,
             'GET', array(), array('FailOnAccessError' => true), $result);
 
         if($success == false)
         {
-            Log::error("Failed to connect to  XING API", array('context' => 'PageController.processQuery'));
+            Log::error("Failed to connect to XING API", array('context' => 'PageController.processQuery'));
             throw(new Exception("Failed to connect to Xing Api"));
         }
 
@@ -428,67 +472,4 @@ class PageController extends BaseController {
 
         return $cleanedData;
     }
-
-    private function showData($data)
-    {
-        $displayName = $data['display_name']['value'];
-
-        unset($data['display_name']);
-
-        $differentLastName = false;
-
-        // Check FM Data: Last Name
-        $fmLastName = $this->fmRecord->getField('Nachname');
-        if(!empty($data['Nachname']) && !empty($fmLastName) && $fmLastName != $data['Nachname']['value']){
-            $differentLastName = true;
-        }
-
-        $this->layout->content = View::make('pages.data')
-            ->with(array(
-                'userName' => $this->xingUser->display_name,
-                'searchQuery' => $this->searchQuery,
-                'resultName' => $displayName,
-                'serial' => $this->serialNumber,
-                'fmId' => $this->fmId,
-                'data' => $data,
-                'differentLastName' => $differentLastName,
-            ));
-    }
-
-    private function importIntoFileMaker($data)
-    {
-        // Remove not existing fields
-        unset($data['display_name'],$data['photo']);
-
-        $record = $this->fm->getRecordById($this->fmLayout, $this->fmRecordId);
-
-        $this->fmErrorHandling($record);
-
-        foreach($data as $key => $item)
-        {
-            $field = str_replace(' ', '_', $key);
-
-            if(Input::get($field) == 'yes')
-            {
-                if(!empty($item['field']))
-                {
-                    $newValue = $item['value'];
-
-                    if($item['field'] == 'Notiz')
-                    {
-                        $newValue = $record->getField($item['field']) .
-                            "\n===============\nXING Import: \n\n" . $newValue."\n===============\n";
-                    }
-                    $record->setField($item['field'], $newValue);
-                }
-            }
-        }
-
-        $result = $record->commit();
-
-        $this->fmErrorHandling($result);
-
-        return true;
-    }
-
 }

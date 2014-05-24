@@ -76,9 +76,25 @@ Route::any('/{serial}/{fmId}', array(
     ->where('serial', '[A-Za-z\-\d+]+')
     ->where('fmId', '[\d+]+');
 
-Route::get('/get/xingsession', 'PageController@checkXingSession');
+Route::group(array('prefix' => 'xing'), function()
+{
+    Route::get('/', 'XingController@showIndex');
 
-Route::get('/xinglogin', 'PageController@showXingLogin');
+    Route::get('/status', 'XingController@jsonXingLoggedIn');
+
+    Route::get('/statusRaw', 'XingController@statusRaw');
+
+    Route::get('/login', 'XingController@showXingLogin');
+
+    Route::get('/data/{serial}/{fmId}', array(
+        'uses' => 'XingController@doSearch'
+    ))
+        ->where('serial', '[A-Za-z\-\d+]+')
+        ->where('fmId', '[\d]+');
+
+});
+
+
 
 Route::get('/debug/fm', function(){
     include_once(base_path().'/app/libraries/filemaker-12/FileMaker.php');
@@ -88,6 +104,19 @@ Route::get('/debug/fm', function(){
 
     $result = $findCommand->execute();
     print_r($result);
+});
+
+Route::get('debug/test', function(){
+
+    $curlUrl = 'http://www.xing.de/places?mhp_id='.$mhpId;
+
+    $curlHandle = curl_init($curlUrl);
+    curl_setopt($curlHandle, CURLOPT_RETURNTRANSFER, true);
+
+    $requestData = curl_exec($curlHandle);
+
+    curl_close($curlHandle);
+
 });
 
 
