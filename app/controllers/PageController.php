@@ -12,6 +12,19 @@ class PageController extends BaseController {
     private $searchQuery = "";
 
     /**
+     * @var Paneon\OAuthClient\OAuthClient
+     */
+    private $oAuthClient = null;
+
+    /**
+     * The User who logged into Xing
+     *
+     * @var Object
+     * @property $display_name
+     */
+    private $xingUser = null;
+
+    /**
      * Display a listing of the resource.
      *
      * @param $serial   string
@@ -24,7 +37,13 @@ class PageController extends BaseController {
 
         $this->fmRecordId = $fmId;
 
-        $this->initClient($serial);
+        try {
+            $this->initClient($serial);
+        }
+        catch(Exception $e){
+            $this->showError("Seriennummer ungültig.");
+            return;
+        }
 
         $oAuthClient = $this->getOAuthClient();
 
@@ -489,6 +508,56 @@ class PageController extends BaseController {
         $this->fmErrorHandling($result);
 
         return true;
+    }
+
+    /**
+     *
+     * @throws Exception
+     * @return null
+     */
+    private function doXingLogin()
+    {
+        $user = null;
+
+        if($this->oAuthClient == null){
+            $this->oAuthClient = $this->getOAuthClient(action('XingController@showXingLogin'));
+        }
+
+        if(($success = $this->oAuthClient->Initialize()))
+        {
+            if(($success = $this->oAuthClient->Process()))
+            {
+                if(strlen($this->oAuthClient->access_token))
+                {
+                    $success = $this->oAuthClient->CallAPI(
+                        'https://api.xing.com/v1/users/me',
+                        'GET', array(), array('FailOnAccessError'=>true), $user);
+                }
+            }
+            else{
+                dd($this->oAuthClient->error);
+                throw(new Exception("Fehler 534: Es konnte keine Verbindung zu XING hergestellt werden."));
+            }
+            $success = $this->oAuthClient->Finalize($success);
+        }
+
+        if($this->oAuthClient->exit)
+        {
+            exit;
+        }
+
+        if($success)
+        {
+            /**
+             * @var Object $user
+             */
+            $this->xingUser = $user->users[0];
+            return $user;
+        }
+        else
+        {
+            throw(new Exception("Fehler 554 : Es konnte keine Verbindung zu XING hergestellt werden."));
+        }
     }
 
 }

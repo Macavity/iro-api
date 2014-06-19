@@ -53,14 +53,14 @@ return array(
 		),
 
 		'mysql' => array(
-			'driver'    => 'mysql',
-			'host'      => 'localhost',
-			'database'  => 'paneon_api',
-			'username'  => 'paneon_api',
-			'password'  => '09Sdmt#6',
-			'charset'   => 'utf8',
-			'collation' => 'utf8_unicode_ci',
-			'prefix'    => '',
+            'driver'    => 'mysql',
+            'host'      => 'localhost',
+            'database'  => 'paneon_api',
+            'username'  => 'paneon_api',
+            'password'  => '09Sdmt#6',
+            'charset'   => 'utf8',
+            'collation' => 'utf8_unicode_ci',
+            'prefix'    => '',
 		),
 
 		'pgsql' => array(

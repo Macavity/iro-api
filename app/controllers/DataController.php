@@ -1,24 +1,207 @@
 <?php
 
+require_once(base_path().'/app/libraries/Paneon/PaneonHelper/Paneon.php');
+
 class DataController extends BaseController {
 
-    private $serialNumber;
+    protected $serialNumber;
 
 
-    public function jobListAll($serial)
+    public function jobListAll($serial, $type = "normal")
+    {
+        $cacheId = "empty";
+        $cacheActive = false;
+
+        try {
+
+            $this->initClient($serial);
+
+            $this->initializeFileMaker();
+
+            $findCommand =& $this->fm->newFindCommand('Projektliste_Web');
+
+            if($type == "archiv"){
+                $cacheId = $this->client->id."-joblist-archiv";
+            }
+            else {
+                $cacheId = $this->client->id."-joblist-normal";
+            }
+
+            if(Cache::has($cacheId)){
+                $jobList = Cache::get($cacheId);
+                $cacheActive = true;
+            }
+            else {
+                if($type == "archiv"){
+                    $records = $this->findArchivedFileMakerJobs();
+                }
+                else {
+                    $records = $this->findPublicFileMakerJobs();
+                }
+
+                $jobList = array();
+
+                foreach($records as $record){
+
+                    /** @var $record FileMaker_Record */
+
+                    /** @var $jobId int */
+                    $jobId = $record->getField('ID');
+
+                    if($jobId != intval($record->getField('ID')) || empty($jobId) || $jobId <= 0){
+                        continue;
+                    }
+
+                    $startDate = $record->getField("Start");
+
+                    if(!empty($startDate))
+                    {
+                        $startDate = $this->formatDate($startDate);
+                    }
+
+                    $intro = $record->getField('Web_Firmenintro');
+                    $detailslink = $record->getField('Web_Detailslink');
+                    $position_name = $record->getField('ProjektName');
+                    $position = $record->getField('JTBStellenbeschreibung');
+
+                    $city = $record->getField('Web_Ort');
+                    $candidate = $record->getField('JTBKandidatenbeschreibung');
+                    $resume = $record->getField('JTBSchlusstext');
+                    $attraktivitaet = $record->getField('JTBAttraktivitaet');
+
+                    $web_berater = $record->getField('Web_Berater');
+                    $web_berater_email = $record->getField('Web_Berater_Email');
+                    $branche = $record->getField('JBranche');
+                    $language = $record->getField('JSprache');
+
+                    $searchText = $record->getField("Web_Volltext");
+
+                    $rewriteLink = $position_name.'-'.$city;
+                    //$rewriteLink = iconv("UTF-8", "ASCII//TRANSLIT", $rewriteLink);
+                    $rewriteLink = str_replace(
+                        array('ä', 'ö', 'ü', 'ß','Ä','Ö','Ü'),
+                        array('ae', 'oe', 'ue', 'ss','Ae', 'Oe', 'Ue'), $rewriteLink);
+                    $rewriteLink = preg_replace('/[^A-z0-9]+/', "_", $rewriteLink);
+
+                    $rewriteLink = preg_replace("/_+/", "_", $rewriteLink);
+
+                    //remove all underscores at the beginning and end
+                    $rewriteLink = trim($rewriteLink, "_");
+
+                    $rewriteLink = $jobId.'-'.$rewriteLink;
+
+                    $google_title = $record->getField('Google Titel');
+                    $google_desc = $record->getField('Google Beschreibung');
+
+
+                    if(empty($google_title)){
+                        $title = $city.' Jobs - '.$position_name;
+                    }
+                    else{
+                        $title = $google_title;
+                    }
+                    $title = Paneon::removeHTML($title);
+
+
+                    //Paneon::debug("Jobtitel:", $title);
+
+                    /*
+                     * Sichtbarkeit des Datensatzes
+                     */
+                    $webProject = $record->getField('Web_Projekt');
+
+                    switch($webProject){
+                        case 'Ja':
+                            $visible = PANEON_JOB_TYPE_NORMAL;
+                            break;
+                        case 'Archiv':
+                            $visible = PANEON_JOB_TYPE_ARCHIVE;
+                            break;
+                        default:
+                            $visible = PANEON_JOB_TYPE_HIDDEN;
+                    }
+                    //Paneon::debug("Sichtbarkeit:", $visible);
+
+                    $row = array(
+                        'fm_id'     => $jobId,
+                        'visible'   => $visible,
+                        'timestamp' => $this->currentTimestamp,
+                        'start_date' => $startDate,
+                        'position'  => $position_name,
+                        'industry'  => $branche,
+                        'location'  => $city,
+                        'contact'   => $web_berater,
+                        'mail'      => $web_berater_email,
+                        'lang'      => ($language == 'Englisch' || strstr($language,"en") ) ? 'en' : 'de',
+                        "full_text" => $searchText,
+                        'rewrite_link' => $rewriteLink,
+                        /*
+                        // Title & Desc
+                        'google_title' => $title,
+                        'google_desc' => $google_desc,
+
+                        // Detail Daten
+                        "Web_Firmenintro" => $intro,
+                        "Web_Detailslink" => $detailslink,
+                        "JTBStellenbeschreibung" => $position,
+                        "JTBKandidatenbeschreibung" => $candidate,
+                        "JTBSchlusstext" => $resume,
+                        "JTBAttraktivitaet" => $attraktivitaet,
+                        */
+                    );
+
+                    $jobList[] = $row;
+                }
+
+                // Cache the joblist for 24 Hours
+                $expiresAt = Carbon::now()->addHours(24);
+
+                Cache::put($cacheId, $jobList, $expiresAt);
+            }
+
+
+
+            return Response::json(array(
+                'cacheActive' => $cacheActive,
+                'results' => $jobList,
+            ));
+        }
+        catch(Exception $e){
+            return Response::json(array(
+                'error' => $e->getMessage(),
+                'code' => $e->getCode(),
+                'cacheId' => $cacheId,
+                'cacheActive' => $cacheActive,
+            ));
+        }
+
+
+    }
+
+    public function jobList($serial, $start, $count)
     {
         $this->initClient($serial);
 
-        $this->initializeFileMaker();
+    }
 
-        $findCommand =& $this->fm->newFindCommand('Projektliste_Web');
-        $findCommand->addFindCriterion('Web_Projekt','="Ja"');
+    public function jobDetail($serial, $jobId)
+    {
+        try {
+            $this->initClient($serial);
 
-        $result = $findCommand->execute();
+            $this->initializeFileMaker();
 
-        $records = $result->getRecords();
+            $findCommand =& $this->fm->newFindCommand('Projektliste_Web');
+            $findCommand->addFindCriterion('Web_Projekt','="Ja"');
+            $findCommand->addFindCriterion('ID','="'.$jobId.'"');
 
-        foreach($records as $record){
+            $result = $findCommand->execute();
+
+            $record = $result->getFirstRecord();
+
+            if(!$this->fmErrorHandling($record)){
+                throw(new Exception("Kein Datensatz gefunden."));
+            }
 
             /** @var $record FileMaker_Record */
 
@@ -26,8 +209,8 @@ class DataController extends BaseController {
             $jobId = $record->getField('ID');
 
             if($jobId != intval($record->getField('ID')) || empty($jobId) || $jobId <= 0){
-                Paneon::debug("Überspringe wegen ungültiger JobId: JobId ".$record->getField('ID').", ProjektName: ".$record->getField('ProjektName'));
-                continue;
+                //Paneon::debug("Überspringe wegen ungültiger JobId: JobId ".$record->getField('ID').", ProjektName: ".$record->getField('ProjektName'));
+                throw(new Exception("Kein Datensatz gefunden."));
             }
 
             $startDate = $record->getField("Start");
@@ -54,20 +237,34 @@ class DataController extends BaseController {
 
             $searchText = $record->getField("Web_Volltext");
 
+            $rewriteLink = $position_name.'-'.$city;
+            //$rewriteLink = iconv("UTF-8", "ASCII//TRANSLIT", $rewriteLink);
+            $rewriteLink = str_replace(
+                array('ä', 'ö', 'ü', 'ß','Ä','Ö','Ü'),
+                array('ae', 'oe', 'ue', 'ss','Ae', 'Oe', 'Ue'), $rewriteLink);
+            $rewriteLink = preg_replace('/[^A-z0-9]+/', "_", $rewriteLink);
+
+            $rewriteLink = preg_replace("/_+/", "_", $rewriteLink);
+
+            //remove all underscores at the beginning and end
+            $rewriteLink = trim($rewriteLink, "_");
+
+            $rewriteLink = $jobId.'-'.$rewriteLink;
+
             $google_title = $record->getField('Google Titel');
             $google_desc = $record->getField('Google Beschreibung');
 
 
             if(empty($google_title)){
-                $title = $city.' Jobs - '.$position_name.' | Pape.de';
+                $title = $city.' Jobs - '.$position_name;
             }
             else{
-                $title = $google_title.' | Pape.de';
+                $title = $google_title;
             }
             $title = Paneon::removeHTML($title);
 
 
-            Paneon::debug("Jobtitel:", $title);
+            //Paneon::debug("Jobtitel:", $title);
 
             /*
              * Sichtbarkeit des Datensatzes
@@ -84,9 +281,7 @@ class DataController extends BaseController {
                 default:
                     $visible = PANEON_JOB_TYPE_HIDDEN;
             }
-            Paneon::debug("Sichtbarkeit:", $visible);
-
-            $row = array(
+            $jobRow = array(
                 'fm_id'     => $jobId,
                 'visible'   => $visible,
                 'timestamp' => $this->currentTimestamp,
@@ -95,42 +290,65 @@ class DataController extends BaseController {
                 'industry'  => $branche,
                 'location'  => $city,
                 'contact'   => $web_berater,
-                'mail'      => $web_berater_email,
+                'contact_mail'      => $web_berater_email,
                 'lang'      => ($language == 'Englisch' || strstr($language,"en") ) ? 'en' : 'de',
                 "full_text" => $searchText,
+                'rewrite_link' => $rewriteLink,
 
                 // Title & Desc
-                'google_title' => $title,
-                'google_desc' => $google_desc,
+                'seo_title' => $title,
+                'seo_desc' => $google_desc,
 
                 // Detail Daten
-                "Web_Firmenintro" => $intro,
+                "job_intro" => $intro,
                 "Web_Detailslink" => $detailslink,
-                "JTBStellenbeschreibung" => $position,
-                "JTBKandidatenbeschreibung" => $candidate,
-                "JTBSchlusstext" => $resume,
-                "JTBAttraktivitaet" => $attraktivitaet,
+                "job_description" => $position,
+                "job_candidate" => $candidate,
+                "job_resume" => $resume,
+                "job_desirability" => $attraktivitaet,
             );
+
+            return Response::json(array(
+                'result' => $jobRow,
+            ));
+
+        }
+        catch(Exception $e){
+            return Response::json(array(
+                'error' => $e->getMessage(),
+                'code' => $e->getCode(),
+            ));
         }
 
 
-    }
 
-    public function jobList($serial, $start, $count)
-    {
-        $this->initClient($serial);
 
     }
 
-    public function jobDetail($serial, $jobId)
+    private function formatDate($date)
     {
-        $this->initClient($serial);
-
-        $this->initializeFileMaker();
-
-        $this->fmRecord = $this->findFileMakerRecord($fmId);
-
-
-
+        if(substr_count($date, "/") > 0){
+            $date = explode("/", $date);
+            /*
+             *                   0    1   2
+             * Eingangsformat: Monat/Tag/Jahr
+             *
+             *                   2    0   1
+             * Ausgangsformat: Jahr-Monat-Tag
+             */
+            $date = $date[2]."-".$date[0]."-".$date[1];
+        }
+        elseif(substr_count($date, ".") > 0){
+            $date = explode(".", $date);
+            /*
+             *                    0   1    2
+             * Eingangsformat: Monat/Tag/Jahr
+             *
+             *                   2    0    1
+             * Ausgangsformat: Jahr-Monat-Tag
+             */
+            $date = $date[2]."-".$date[0]."-".$date[1];
+        }
+        return $date;
     }
 }

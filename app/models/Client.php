@@ -3,12 +3,13 @@
 /**
  * Class Client
  *
- * @property String $name;
- * @property String $host;
- * @property String $db_name;
- * @property String $serial;
- * @property String $fm_user;
- * @property String $fm_password;
+ * @property Integer    $id
+ * @property String     $name
+ * @property String     $host
+ * @property String     $db_name
+ * @property String     $serial
+ * @property String     $fm_user
+ * @property String     $fm_password
  *
  */
 class Client extends Eloquent {
