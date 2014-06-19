@@ -6,6 +6,7 @@
  */
 include_once(base_path().'/app/libraries/filemaker-12/FileMaker.php');
 
+
 /*
  *---------------------------------------------------------------
  * Job Visibility Types
@@ -30,7 +31,7 @@ class BaseController extends Controller {
 
     protected $fmId = 0;
 
-    protected $fmLayout = 'Personenliste_Web';
+    protected $fmLayout = 'Projektliste_Web';
 
     /**
      * @var FileMaker_Record
@@ -82,10 +83,9 @@ class BaseController extends Controller {
          */
         $this->client = Client::where('serial', '=', $this->serialNumber)->first();
 
-        if(empty($this->client))
+        if(!$this->client)
         {
-            $this->showError("Seriennummer ungültig.");
-            return;
+            throw(new Exception("Seriennummer ungültig."));
         }
 
     }
@@ -115,6 +115,100 @@ class BaseController extends Controller {
     }
 
     /**
+     * Get all jobs, optionally above a specified change date
+     *
+     * @param int $dateTimestamp
+     *
+     * @throws Exception
+     * @return FileMaker_Record[]
+     */
+    protected function findFileMakerJobs($dateTimestamp = 0)
+    {
+        $date = strftime("%m/%d/%Y", $dateTimestamp);
+
+        $findCommand =& $this->fm->newFindCommand($this->fmLayout);
+        $findCommand->addFindCriterion('AenderungsDatum', '>'.$date);
+
+        $result = $findCommand->execute();
+
+        $this->fmErrorHandling($result);
+
+        $records = $result->getRecords();
+
+        return $records;
+    }
+
+    /**
+     * @throws Exception
+     * @return FileMaker_Record[]
+     */
+    protected function findArchivedFileMakerJobs()
+    {
+        $findCommand =& $this->fm->newFindCommand($this->fmLayout);
+        $findCommand->addFindCriterion('Web_Projekt','="Archiv"');
+
+        $result = $findCommand->execute();
+
+        $this->fmErrorHandling($result);
+
+        $records = $result->getRecords();
+
+        return $records;
+    }
+
+    /**
+     * @throws Exception
+     * @return FileMaker_Record[]
+     */
+    protected function findHiddenFileMakerJobs()
+    {
+        $findCommand =& $this->fm->newFindCommand($this->fmLayout);
+        $findCommand->addFindCriterion('Web_Projekt','="Nein"');
+
+        $result = $findCommand->execute();
+
+        $this->fmErrorHandling($result);
+
+        $records = $result->getRecords();
+
+        return $records;
+    }
+
+    /**
+     * @throws Exception
+     * @return FileMaker_Record[]
+     */
+    protected function findPublicFileMakerJobs()
+    {
+        $findCommand =& $this->fm->newFindCommand($this->fmLayout);
+        $findCommand->addFindCriterion('Web_Projekt','="Ja"');
+
+        $result = $findCommand->execute();
+
+        $this->fmErrorHandling($result);
+
+        $records = $result->getRecords();
+
+        return $records;
+    }
+
+    /**
+     * @return FileMaker_Record[]
+     * @throws Exception
+     */
+    protected function findAny()
+    {
+        $findCommand =& $this->fm->newFindAnyCommand($this->fmLayout);
+        $result = $findCommand->execute();
+
+        $this->fmErrorHandling($result);
+
+        $records = $result->getRecords();
+
+        return $records;
+    }
+
+    /**
      * @param  FileMaker_Error|FileMaker_Result|FileMaker_Record[] $error
      *
      * @throws Exception
@@ -127,7 +221,23 @@ class BaseController extends Controller {
             /**
              * @var FileMaker_Error $error
              */
-            throw(new Exception($error->getMessage(), $error->getCode()));
+
+            $message = $error->getMessage();
+            $code = $error->getCode();
+
+            switch($code){
+                case 102:
+                    $message = "Feld fehlt in Layout (".$this->fmLayout.").";
+                    break;
+                case 401:
+                    $message = "Es wurden keine Ergebnisse gefunden.";
+                    break;
+                case 8003:
+                    $message = "Der Speichervorgang konnte auf den Datensatz nicht zugreifen.";
+                    break;
+            }
+
+            throw(new Exception($message, $code));
         }
         return true;
     }
