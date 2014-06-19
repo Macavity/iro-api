@@ -48,10 +48,15 @@ Route::group(array('prefix' => 'admin', 'before' => 'auth'), function()
 // ===============================================
 Route::group(array('prefix' => 'data'), function()
 {
-    Route::get('/{serial}/jobs/all', array(
-        'uses' => 'DataController@jobListAll'
-        ))
+    Route::get('{serial}/jobs/all/{type?}', 'DataController@jobListAll')
         ->where('serial', '[A-Za-z\-\d+]+');
+
+    Route::get('/{serial}/job-detail/{jobId}', array(
+        'uses' => 'DataController@jobDetail'
+    ))
+        ->where('serial', '[A-Za-z\-\d+]+')
+        ->where('jobId', '[\d]+');
+    /*
 
     Route::get('/{serial}/jobs/{start}/{count}', array(
         'uses' => 'DataController@jobList'
@@ -60,11 +65,7 @@ Route::group(array('prefix' => 'data'), function()
         ->where('start', '[\d]+')
         ->where('count', '[\d]+');
 
-    Route::get('/{serial}/job-detail/{jobId}', array(
-        'uses' => 'DataController@jobDetail'
-    ))
-        ->where('serial', '[A-Za-z\-\d+]+')
-        ->where('jobId', '[\d]+');
+    */
 
 });
 
@@ -76,8 +77,7 @@ Route::any('/{serial}/{fmId}', array(
     ->where('serial', '[A-Za-z\-\d+]+')
     ->where('fmId', '[\d+]+');
 
-Route::group(array('prefix' => 'xing'), function()
-{
+Route::group(array('prefix' => 'xing'), function(){
     Route::get('/', 'XingController@showIndex');
 
     Route::get('/status', 'XingController@jsonXingLoggedIn');
