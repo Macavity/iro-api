@@ -1,13 +1,17 @@
 <?php
 
+require_once(base_path().'/app/libraries/Paneon/PaneonHelper/Paneon.php');
+
 class PageController extends BaseController {
+
+    protected $fmLayout = 'Personenliste_Web';
 
     /**
      * Filled from the FileMaker database field, is used as a placeholder if not empty
      *
      * @var string
      */
-    private $fmXingLink = "";
+    protected $fmXingLink = "";
 
     private $searchQuery = "";
 
@@ -60,7 +64,7 @@ class PageController extends BaseController {
             $messageString = $e->getMessage();
 
             if($e->getCode() > 0){
-                $messageString = "Fehler: ".$e->getCode().$messageString. "<!-- (Datei: ".$e->getFile().", Zeile: " .$e->getLine()." -->";
+                $messageString = "Xing Fehler: ".$e->getCode()." ".$messageString. "<!-- (Datei: ".$e->getFile().", Zeile: " .$e->getLine()." -->";
             }
 
             $this->showError($messageString);
@@ -70,13 +74,13 @@ class PageController extends BaseController {
         // Set Display Name of logged in user
         $this->layout->userName = $this->xingUser->display_name;
 
-
         try {
 
             error_reporting(E_ALL ^ E_DEPRECATED ^ E_STRICT ^ E_NOTICE);
 
             $this->initializeFileMaker();
 
+            Paneon::debug("Find Record ".$fmId);
             $this->fmRecord = $this->findFileMakerRecord($fmId);
 
             $query = Input::get('xinglink','');
@@ -123,7 +127,7 @@ class PageController extends BaseController {
             $messageString = $e->getMessage();
 
             if($e->getCode() > 0){
-                $messageString = "Fehler: ".$e->getCode().$messageString."<!-- Datei: ".$e->getFile().", Zeile: " .$e->getLine()." -->";
+                $messageString = "Fehler: ".$e->getCode()." ".$messageString."<!-- Datei: ".$e->getFile().", Zeile: " .$e->getLine()." -->";
 
             }
 
