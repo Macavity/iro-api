@@ -45,11 +45,11 @@ class PageController extends BaseController {
             $this->initClient($serial);
         }
         catch(Exception $e){
-            $this->showError("Seriennummer ungültig.");
+            $this->showError("Die Seriennummer ist ungültig oder Ihre Datenbank wurde nicht freigeschaltet. Bitte kontaktieren Sie Ihren Ansprechpartner bei Heads2Hunt.");
             return;
         }
 
-        $oAuthClient = $this->getOAuthClient();
+        $this->oAuthClient = $this->getOAuthClient();
 
         /*
          * =============================================
@@ -57,15 +57,24 @@ class PageController extends BaseController {
          * =============================================
          */
         try{
-            $this->doXingLogin($oAuthClient);
+            $this->doXingLogin();
         }
         catch(Exception $e)
         {
             $messageString = $e->getMessage();
 
             if($e->getCode() > 0){
-                $messageString = "Xing Fehler: ".$e->getCode()." ".$messageString. "<!-- (Datei: ".$e->getFile().", Zeile: " .$e->getLine()." -->";
+                $messageString = "Xing Fehler: ".$e->getCode()." ".$messageString;
             }
+            Log::debug($messageString, array(
+                'serial' => $this->serialNumber,
+                'fmId' => $this->fmId,
+                'file' => $e->getFile(),
+                'code' => $e->getCode(),
+                'line' => $e->getLine(),
+                'backtrace' => $e->getTraceAsString(),
+                'previous' => $e->getPrevious()
+            ));
 
             $this->showError($messageString);
             return;
@@ -80,7 +89,6 @@ class PageController extends BaseController {
 
             $this->initializeFileMaker();
 
-            Paneon::debug("Find Record ".$fmId);
             $this->fmRecord = $this->findFileMakerRecord($fmId);
 
             $query = Input::get('xinglink','');
@@ -99,11 +107,11 @@ class PageController extends BaseController {
             {
                 $this->searchQuery = $query;
 
-                $data = $this->processQuery($this->searchQuery, $oAuthClient);
+                $data = $this->processQuery($this->searchQuery, $this->oAuthClient);
 
                 if($isPostedForm)
                 {
-                    $data = $this->processQuery($this->searchQuery, $oAuthClient);
+                    $data = $this->processQuery($this->searchQuery, $this->oAuthClient);
 
                     if($this->importIntoFileMaker($data))
                     {
@@ -126,10 +134,26 @@ class PageController extends BaseController {
         {
             $messageString = $e->getMessage();
 
-            if($e->getCode() > 0){
-                $messageString = "Fehler: ".$e->getCode()." ".$messageString."<!-- Datei: ".$e->getFile().", Zeile: " .$e->getLine()." -->";
-
+            if(substr_count($messageString, "Unknown")
+                || substr_count($messageString, "error")
+                || substr_count($messageString, "Error")){
+                $messageString = "Es gab einen Fehler beim Speichern der Daten. Bitte achten Sie darauf dass keine anderen Benutzer oder Sie selbst in einem der Datenbankfelder aktiv sind. Der Datensatz ist sonder gesperrt und ein Import von externen Daten ist nicht möglich.";
             }
+            elseif($e->getCode() > 0){
+                $messageString = "Fehler: ".$e->getCode()." ".$messageString;
+            }
+
+            Log::debug($messageString, array(
+                'serial' => $this->serialNumber,
+                'fmId' => $this->fmId,
+                'searchQuery' => $this->searchQuery,
+                'fmAction' => $this->fmAction,
+                'file' => $e->getFile(),
+                'code' => $e->getCode(),
+                'line' => $e->getLine(),
+                'backtrace' => $e->getTraceAsString(),
+                'previous' => $e->getPrevious()
+            ));
 
             $this->showError($messageString);
             return;
@@ -248,8 +272,6 @@ class PageController extends BaseController {
         {
             $query = substr($query, strpos($query, "profiles/")+9);
         }
-        //echo $query;
-
 
         /*
          *  Alexander_Pape3?someparameter=somevalue
@@ -273,8 +295,18 @@ class PageController extends BaseController {
 
         if($success == false)
         {
-            Log::error("Failed to connect to  XING API", array('context' => 'PageController.processQuery'));
-            throw(new Exception("Failed to connect to Xing Api"));
+            $e = new Exception();
+            Log::error("Failed to connect to  XING API", array(
+                'context' => 'PageController.processQuery',
+                'serial' => $this->serialNumber,
+                'fmId' => $this->fmId,
+                'file' => $e->getFile(),
+                'code' => $e->getCode(),
+                'line' => $e->getLine(),
+                'backtrace' => $e->getTraceAsString(),
+                'previous' => $e->getPrevious()
+            ));
+            throw(new Exception("Es wurde kein Profil mit diesem Link gefunden. Bitte geben Sie keine Suchbegriffe in das Suchfeld ein sondern den Link zu einem existierenden Profil."));
         }
 
         /**
@@ -284,8 +316,19 @@ class PageController extends BaseController {
 
         if($userResult === false)
         {
-            Log::error("Failed to connect to  XING API", array('context' => 'PageController.processQuery', 'more' => 'No user found'));
-            throw(new Exception("Failed to connect to Xing API"));
+            $e = new Exception();
+            Log::error("Failed to connect to  XING API", array(
+                'context' => 'PageController.processQuery',
+                'more' => 'No user found',
+                'serial' => $this->serialNumber,
+                'fmId' => $this->fmId,
+                'file' => $e->getFile(),
+                'code' => $e->getCode(),
+                'line' => $e->getLine(),
+                'backtrace' => $e->getTraceAsString(),
+                'previous' => $e->getPrevious()
+            ));
+            throw(new Exception("Es wurde kein Profil mit diesem Link gefunden. Bitte geben Sie keine Suchbegriffe in das Suchfeld ein sondern den Link zu einem existierenden Profil."));
         }
 
         //dd($userResult);

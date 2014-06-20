@@ -55,6 +55,8 @@ class BaseController extends Controller {
      */
     protected $serialNumber = "";
 
+    protected $fmXingLink;
+
     /**
      * Show an error alert page
      *
@@ -237,15 +239,23 @@ class BaseController extends Controller {
 
             switch($code){
                 case 102:
-                    $message = "Feld fehlt in Layout (".$this->fmLayout.").";
+                    $message = "Feld fehlt in Layout, bitte kontaktieren Sie den Heads2Hunt Support wegen dieses Fehlers.";
                     break;
                 case 401:
-                    $message = "Es wurden keine Ergebnisse gefunden. ".$this->fmAction;
+                    $message = "Es wurden keine Ergebnisse gefunden.";
                     break;
                 case 8003:
                     $message = "Der Speichervorgang konnte auf den Datensatz nicht zugreifen.";
                     break;
             }
+            Log::error("FileMaker Error", array(
+                'serial' => $this->serialNumber,
+                'fmId' => $this->fmId,
+                'fmAction' => $this->fmAction,
+                'message' => $error->getMessage(),
+                'code' => $error->getCode(),
+                'backtrace' => $error->getBacktrace(),
+            ));
 
             throw(new Exception($message, $code));
         }
