@@ -6,6 +6,7 @@
  */
 include_once(base_path().'/app/libraries/filemaker-12/FileMaker.php');
 
+require_once(base_path().'/app/libraries/Paneon/PaneonHelper/Paneon.php');
 
 /*
  *---------------------------------------------------------------
@@ -32,6 +33,8 @@ class BaseController extends Controller {
     protected $fmId = 0;
 
     protected $fmLayout = 'Projektliste_Web';
+
+    protected $fmAction = '';
 
     /**
      * @var FileMaker_Record
@@ -124,6 +127,7 @@ class BaseController extends Controller {
      */
     protected function findFileMakerJobs($dateTimestamp = 0)
     {
+        $this->fmAction = "findFileMakerJobs";
         $date = strftime("%m/%d/%Y", $dateTimestamp);
 
         $findCommand =& $this->fm->newFindCommand($this->fmLayout);
@@ -144,6 +148,7 @@ class BaseController extends Controller {
      */
     protected function findArchivedFileMakerJobs()
     {
+        $this->fmAction = "findArchivedFileMakerJobs";
         $findCommand =& $this->fm->newFindCommand($this->fmLayout);
         $findCommand->addFindCriterion('Web_Projekt','="Archiv"');
 
@@ -162,6 +167,7 @@ class BaseController extends Controller {
      */
     protected function findHiddenFileMakerJobs()
     {
+        $this->fmAction = "findHiddenFileMakerJobs";
         $findCommand =& $this->fm->newFindCommand($this->fmLayout);
         $findCommand->addFindCriterion('Web_Projekt','="Nein"');
 
@@ -180,6 +186,7 @@ class BaseController extends Controller {
      */
     protected function findPublicFileMakerJobs()
     {
+        $this->fmAction = "findPublicFileMakerJobs";
         $findCommand =& $this->fm->newFindCommand($this->fmLayout);
         $findCommand->addFindCriterion('Web_Projekt','="Ja"');
 
@@ -198,6 +205,7 @@ class BaseController extends Controller {
      */
     protected function findAny()
     {
+        $this->fmAction = "findAny";
         $findCommand =& $this->fm->newFindAnyCommand($this->fmLayout);
         $result = $findCommand->execute();
 
@@ -224,13 +232,15 @@ class BaseController extends Controller {
 
             $message = $error->getMessage();
             $code = $error->getCode();
+            $backtrace = $error->getBacktrace();
+            //Paneon::debug("Backtrace", $backtrace);
 
             switch($code){
                 case 102:
                     $message = "Feld fehlt in Layout (".$this->fmLayout.").";
                     break;
                 case 401:
-                    $message = "Es wurden keine Ergebnisse gefunden.";
+                    $message = "Es wurden keine Ergebnisse gefunden. ".$this->fmAction;
                     break;
                 case 8003:
                     $message = "Der Speichervorgang konnte auf den Datensatz nicht zugreifen.";
@@ -280,6 +290,7 @@ class BaseController extends Controller {
      */
     protected function findFileMakerRecord($id)
     {
+        $this->fmAction = "findFileMakerRecord($id)";
         $findCommand = $this->fm->newFindCommand($this->fmLayout);
         $findCommand->addFindCriterion('ID', '='.$id);
         $result = $findCommand->execute();
@@ -301,7 +312,5 @@ class BaseController extends Controller {
 
             return $record;
         }
-
-        throw(new Exception("Kein Ergebnis gefunden."));
     }
 }
