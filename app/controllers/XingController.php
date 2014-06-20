@@ -249,7 +249,7 @@ class XingController extends BaseController {
         }
         else
         {
-            throw(new Exception("Fehler 554 : Es konnte keine Verbindung zu XING hergestellt werden."));
+            throw(new Exception("Fehler 554: Es konnte keine Verbindung zu XING hergestellt werden."));
         }
     }
 
