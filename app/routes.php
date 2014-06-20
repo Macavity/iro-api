@@ -56,17 +56,6 @@ Route::group(array('prefix' => 'data'), function()
     ))
         ->where('serial', '[A-Za-z\-\d+]+')
         ->where('jobId', '[\d]+');
-    /*
-
-    Route::get('/{serial}/jobs/{start}/{count}', array(
-        'uses' => 'DataController@jobList'
-        ))
-        ->where('serial', '[A-Za-z\-\d+]+')
-        ->where('start', '[\d]+')
-        ->where('count', '[\d]+');
-
-    */
-
 });
 
 // First Page (Form)
@@ -77,7 +66,7 @@ Route::any('/{serial}/{fmId}', array(
     ->where('serial', '[A-Za-z\-\d+]+')
     ->where('fmId', '[\d+]+');
 
-Route::group(array('prefix' => 'xing'), function(){
+/*Route::group(array('prefix' => 'xing'), function(){
     Route::get('/', 'XingController@showIndex');
 
     Route::get('/status', 'XingController@jsonXingLoggedIn');
@@ -92,7 +81,7 @@ Route::group(array('prefix' => 'xing'), function(){
         ->where('serial', '[A-Za-z\-\d+]+')
         ->where('fmId', '[\d]+');
 
-});
+});*/
 
 
 
