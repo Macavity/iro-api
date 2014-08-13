@@ -6,6 +6,7 @@ $vendorDir = dirname(dirname(__FILE__));
 $baseDir = dirname($vendorDir);
 
 return array(
+    'AddCacheTimeToClientsTable' => $baseDir . '/app/database/migrations/2014_06_20_172458_add_cache_time_to_clients_table.php',
     'Assetic\\AssetManager' => $vendorDir . '/kriswallsmith/assetic/src/Assetic/AssetManager.php',
     'Assetic\\AssetWriter' => $vendorDir . '/kriswallsmith/assetic/src/Assetic/AssetWriter.php',
     'Assetic\\Asset\\AssetCache' => $vendorDir . '/kriswallsmith/assetic/src/Assetic/Asset/AssetCache.php',
@@ -829,6 +830,7 @@ return array(
     'Jeremeamia\\SuperClosure\\SerializableClosure' => $vendorDir . '/jeremeamia/SuperClosure/src/Jeremeamia/SuperClosure/SerializableClosure.php',
     'Jeremeamia\\SuperClosure\\Visitor\\ClosureFinderVisitor' => $vendorDir . '/jeremeamia/SuperClosure/src/Jeremeamia/SuperClosure/Visitor/ClosureFinderVisitor.php',
     'Jeremeamia\\SuperClosure\\Visitor\\MagicConstantVisitor' => $vendorDir . '/jeremeamia/SuperClosure/src/Jeremeamia/SuperClosure/Visitor/MagicConstantVisitor.php',
+    'Job' => $baseDir . '/app/models/Job.php',
     'Math_BigInteger' => $vendorDir . '/phpseclib/phpseclib/phpseclib/Math/BigInteger.php',
     'Monolog\\ErrorHandler' => $vendorDir . '/monolog/monolog/src/Monolog/ErrorHandler.php',
     'Monolog\\Formatter\\ChromePHPFormatter' => $vendorDir . '/monolog/monolog/src/Monolog/Formatter/ChromePHPFormatter.php',
@@ -1441,9 +1443,7 @@ return array(
     'Psr\\Log\\InvalidArgumentException' => $vendorDir . '/psr/log/Psr/Log/InvalidArgumentException.php',
     'Psr\\Log\\LogLevel' => $vendorDir . '/psr/log/Psr/Log/LogLevel.php',
     'Psr\\Log\\LoggerAwareInterface' => $vendorDir . '/psr/log/Psr/Log/LoggerAwareInterface.php',
-    'Psr\\Log\\LoggerAwareTrait' => $vendorDir . '/psr/log/Psr/Log/LoggerAwareTrait.php',
     'Psr\\Log\\LoggerInterface' => $vendorDir . '/psr/log/Psr/Log/LoggerInterface.php',
-    'Psr\\Log\\LoggerTrait' => $vendorDir . '/psr/log/Psr/Log/LoggerTrait.php',
     'Psr\\Log\\NullLogger' => $vendorDir . '/psr/log/Psr/Log/NullLogger.php',
     'SessionHandlerInterface' => $vendorDir . '/symfony/http-foundation/Symfony/Component/HttpFoundation/Resources/stubs/SessionHandlerInterface.php',
     'Stack\\Builder' => $vendorDir . '/stack/builder/src/Stack/Builder.php',
@@ -1991,6 +1991,7 @@ return array(
     'Whoops\\Provider\\Zend\\ExceptionStrategy' => $vendorDir . '/filp/whoops/src/Whoops/Provider/Zend/ExceptionStrategy.php',
     'Whoops\\Provider\\Zend\\RouteNotFoundStrategy' => $vendorDir . '/filp/whoops/src/Whoops/Provider/Zend/RouteNotFoundStrategy.php',
     'Whoops\\Run' => $vendorDir . '/filp/whoops/src/Whoops/Run.php',
+    'Xing' => $baseDir . '/app/models/Xing.php',
     'XingController' => $baseDir . '/app/controllers/XingController.php',
     'dflydev\\markdown\\IMarkdownParser' => $vendorDir . '/dflydev/markdown/src/dflydev/markdown/IMarkdownParser.php',
     'dflydev\\markdown\\MarkdownExtraParser' => $vendorDir . '/dflydev/markdown/src/dflydev/markdown/MarkdownExtraParser.php',
