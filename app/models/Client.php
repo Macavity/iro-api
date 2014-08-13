@@ -32,6 +32,8 @@ class Client extends Eloquent {
         'serial' => 'Seriennummer',
         'fm_user' => 'FM Benutzer',
         'fm_password' => 'FM Passwort',
+        'cache_time' => 'Cache Dauer',
+        'api_token' => 'API Token',
     );
 
 
@@ -40,7 +42,7 @@ class Client extends Eloquent {
      *
      * @var array
      */
-    protected $hidden = array('serial', 'fm_user', 'fm_password');
+    protected $hidden = array('serial', 'fm_user', 'fm_password', 'api_token');
 
     public function getFieldLabels()
     {
