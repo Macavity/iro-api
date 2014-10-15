@@ -2,6 +2,8 @@
 
 class UsersController extends BaseController {
 
+    protected $layout = 'layouts.admin';
+
 	/**
 	 * Display a listing of the resource.
 	 *
@@ -9,7 +11,9 @@ class UsersController extends BaseController {
 	 */
 	public function index()
 	{
-        return View::make('users.index');
+        $users = User::all();
+
+        $this->layout->content = View::make('users.index')->with('users', $users);
 	}
 
 	/**
@@ -19,7 +23,7 @@ class UsersController extends BaseController {
 	 */
 	public function create()
 	{
-        return View::make('users.create');
+        $this->layout->content = View::make('users.create');
 	}
 
 	/**
@@ -29,7 +33,23 @@ class UsersController extends BaseController {
 	 */
 	public function store()
 	{
-		//
+        $rules = array();
+
+        $validator = Validator::make(Input::all(), $rules);
+
+        if($validator->fails())
+        {
+            return Redirect::to('admin/clients/create')
+                ->withErrors($validator)
+                ->withInput(Input::all());
+        }
+        else
+        {
+            $client = Client::create(Input::all());
+            Session::flash('message', 'Kunde '.$client->name.' erfolgreich erstellt.');
+            return Redirect::to(action('ClientsController@index'));
+
+        }
 	}
 
 	/**
