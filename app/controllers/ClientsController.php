@@ -11,7 +11,6 @@ class ClientsController extends BaseController {
 	 */
 	public function index()
 	{
-
         $clients = Client::all();
 
         $this->layout->content = View::make('clients.index')->with('clients', $clients);
