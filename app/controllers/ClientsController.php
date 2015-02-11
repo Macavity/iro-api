@@ -61,9 +61,29 @@ class ClientsController extends BaseController {
 	 */
 	public function show($id)
 	{
+        /**
+         * @class Client
+         */
         $client = Client::find($id);
-        $this->layout->content = View::make('clients.show')->with('client', $client);
+
+        $cacheJoblistId = $client->getCacheId('joblist');
+        $cacheJoblistActive = Cache::has($cacheJoblistId);
+
+        $this->layout->content = View::make('clients.show')
+            ->with('cacheJoblistActive', $cacheJoblistActive)
+            ->with('cacheJoblistId', $cacheJoblistId)
+            ->with('client', $client);
 	}
+
+    /**
+     * @param $id
+     */
+    public function emptycache($id){
+        $client = Client::find($id);
+
+        $cacheJoblistId = $client->id."-joblist-normal";
+
+    }
 
 	/**
 	 * Show the form for editing the specified resource.
