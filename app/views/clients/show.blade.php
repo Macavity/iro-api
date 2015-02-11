@@ -8,5 +8,12 @@
         <strong>{{$label}}:</strong> {{$client->$field}}<br/>
         @endforeach
     </p>
+    <p>Cache für Jobliste ist
+        @if($cacheJoblistActive)
+        <span class="label label-success">Aktiv</span>
+        @else
+        <span class="label label-warning">Leer</span>
+        @endif
+    </p>
 </div>
 @stop
