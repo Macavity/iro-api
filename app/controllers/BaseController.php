@@ -154,6 +154,7 @@ class BaseController extends Controller {
         $findCommand =& $this->fm->newFindCommand($this->fmLayout);
         $findCommand->addFindCriterion('Web_Projekt','="Archiv"');
 
+
         $result = $findCommand->execute();
 
         $this->fmErrorHandling($result);

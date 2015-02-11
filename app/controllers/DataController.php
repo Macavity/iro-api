@@ -12,6 +12,8 @@ class DataController extends BaseController {
         $cacheId = "empty";
         $cacheActive = false;
 
+        $cacheForceRefresh = (Input::get('forceRefresh') == 1);
+
         try {
 
             $this->initClient($serial);
@@ -27,7 +29,7 @@ class DataController extends BaseController {
                 $cacheId = $this->client->id."-joblist-normal";
             }
 
-            if(Cache::has($cacheId)){
+            if(Cache::has($cacheId) && $cacheForceRefresh == false){
                 $jobList = Cache::get($cacheId);
                 $cacheActive = true;
             }
@@ -158,7 +160,6 @@ class DataController extends BaseController {
 
                 Cache::put($cacheId, $jobList, $expiresAt);
             }
-
 
 
             return Response::json(array(
