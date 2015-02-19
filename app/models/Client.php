@@ -57,4 +57,8 @@ class Client extends Eloquent {
                 return $this->id."-joblist-archive";
         }
     }
+
+    public function getJobsChId(){
+        return 30543;
+    }
 }
