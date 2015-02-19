@@ -51,6 +51,9 @@ Route::group(array('prefix' => 'data'), function()
     Route::get('{serial}/jobs/all/{type?}', 'DataController@jobListAll')
         ->where('serial', '[A-Za-z\-\d+]+');
 
+    Route::get('{serial}/jobs/external/{format?}', 'DataController@externalJobList')
+        ->where('serial', '[A-Za-z\-\d+]+');
+
     Route::get('/{serial}/job-detail/{jobId}', array(
         'uses' => 'DataController@jobDetail'
     ))

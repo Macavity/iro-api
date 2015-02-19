@@ -203,6 +203,26 @@ class BaseController extends Controller {
     }
 
     /**
+     * @throws Exception
+     * @return FileMaker_Record[]
+     */
+    protected function findExternalFileMakerJobs()
+    {
+        $this->fmAction = "findExternalFileMakerJobs";
+        $findCommand =& $this->fm->newFindCommand($this->fmLayout);
+
+        $findCommand->addFindCriterion('Web Export','="Ja"');
+
+        $result = $findCommand->execute();
+
+        $this->fmErrorHandling($result);
+
+        $records = $result->getRecords();
+
+        return $records;
+    }
+
+    /**
      * @return FileMaker_Record[]
      * @throws Exception
      */
