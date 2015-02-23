@@ -302,27 +302,34 @@ class DataController extends BaseController {
                         $jobDescription = $position;
 
                         if($this->client->name == "iRO Stocker"){
-                            // Intro
+                            /*
+                             *  Intro
+                             */
+                            $intro = str_replace("<br>", "<br />", $intro);
+                            $intro = str_replace("<br/>", "<br />", $intro);
 
-                            $introLines = explode("<br>", $intro);
+                            $introLines = explode("<br />", $intro);
+
                             $intro = '<h2>'.$introLines[0].'</h2>';
                             for($i = 1; count($introLines) > $i; $i++){
 
-                                $intro .= $introLines;
+                                $intro .= "\n".$introLines[$i];
                                 if(count($introLines) > ($i+1)){
-                                    $intro .= '<br>';
+                                    $intro .= '<br />';
                                 }
                             }
 
-                            // Job Description
+                            /*
+                             *  Job Description
+                             */
                             $jobDescription = "";
 
-                            $positionLines = explode("<br>", $position);
+                            $positionLines = explode("<br />", $position);
 
                             if(count($positionLines) > 0){
-                                $jobDescription .= '<b>Ihre Aufgaben:</b><br><ul>';
+                                $jobDescription .= '<b>Ihre Aufgaben:</b><br />'."\n".'<ul>';
                                 foreach($positionLines as $line){
-                                    $jobDescription .= '<li>'.$line.'</li>';
+                                    $jobDescription .= "\n".'<li>'.$line.'</li>';
                                 }
                                 $jobDescription .= '</ul>';
                             }
@@ -330,7 +337,7 @@ class DataController extends BaseController {
                             $candidateLines = explode("<br>", $candidate);
 
                             if(count($candidateLines) > 0){
-                                $jobDescription .= '<b>Ihr Profil:</b><br><ul>';
+                                $jobDescription .= '<b>Ihr Profil:</b><br /><ul>';
                                 foreach($candidateLines as $line){
                                     $jobDescription .= '<li>'.$line.'</li>';
                                 }
