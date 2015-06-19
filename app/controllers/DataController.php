@@ -157,7 +157,7 @@ class DataController extends BaseController {
                 }
 
                 // Cache the joblist for 24 Hours
-                $expiresAt = Carbon::now()->addHours(24);
+                $expiresAt = Carbon::now()->addHours(1);
 
                 Cache::put($cacheId, $jobList, $expiresAt);
             }
@@ -469,7 +469,7 @@ class DataController extends BaseController {
             $this->initializeFileMaker();
 
             $findCommand =& $this->fm->newFindCommand('Projektliste_Web');
-            $findCommand->addFindCriterion('Web_Projekt','="Ja"');
+            //$findCommand->addFindCriterion('Web_Projekt','="Ja"');
             $findCommand->addFindCriterion('ID','="'.$jobId.'"');
 
             $result = $findCommand->execute();
@@ -558,6 +558,12 @@ class DataController extends BaseController {
                 default:
                     $visible = PANEON_JOB_TYPE_HIDDEN;
             }
+
+            if($visible == PANEON_JOB_TYPE_HIDDEN){
+                // Only return data to visible or archived projects
+                throw(new Exception("Kein Datensatz gefunden."));
+            }
+
             $jobRow = array(
                 'fm_id'     => $jobId,
                 'visible'   => $visible,
