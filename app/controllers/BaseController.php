@@ -154,6 +154,7 @@ class BaseController extends Controller {
         $findCommand =& $this->fm->newFindCommand($this->fmLayout);
         $findCommand->addFindCriterion('Web_Projekt','="Archiv"');
 
+
         $result = $findCommand->execute();
 
         $this->fmErrorHandling($result);
@@ -191,6 +192,26 @@ class BaseController extends Controller {
         $this->fmAction = "findPublicFileMakerJobs";
         $findCommand =& $this->fm->newFindCommand($this->fmLayout);
         $findCommand->addFindCriterion('Web_Projekt','="Ja"');
+
+        $result = $findCommand->execute();
+
+        $this->fmErrorHandling($result);
+
+        $records = $result->getRecords();
+
+        return $records;
+    }
+
+    /**
+     * @throws Exception
+     * @return FileMaker_Record[]
+     */
+    protected function findExternalFileMakerJobs()
+    {
+        $this->fmAction = "findExternalFileMakerJobs";
+        $findCommand =& $this->fm->newFindCommand($this->fmLayout);
+
+        $findCommand->addFindCriterion('Web Export','="Ja"');
 
         $result = $findCommand->execute();
 

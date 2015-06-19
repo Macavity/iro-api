@@ -1,6 +1,6 @@
 {
-    "name": "PaneonWebImport",
-    "version": "0.0.1",
+    "name": "PaneonAPI",
+    "version": "1.1.0",
     "description": "",
     "private": true,
     "scripts": {

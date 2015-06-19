@@ -85,10 +85,6 @@ class PageController extends BaseController {
 
         try {
 
-            error_reporting(E_ALL ^ E_DEPRECATED ^ E_STRICT ^ E_NOTICE);
-
-            $this->initializeFileMaker();
-
             $this->fmRecord = $this->findFileMakerRecord($fmId);
 
             $query = Input::get('xinglink','');
@@ -162,6 +158,36 @@ class PageController extends BaseController {
 
 
 	}
+
+    public function systemCheck($serial){
+
+        try {
+            $this->initClient($serial);
+        }
+        catch(Exception $e){
+            return Response::json(array(
+                'errorMessage' => 'initClient failed'
+            ));
+        }
+
+        $response = Response::json(array(
+            'success' => true,
+        ));
+
+
+        try {
+            $records = $this->findAny();
+        }
+        catch(Exception $e){
+            $response = Response::json(array(
+                'errorMessage' => 'findAny failed'
+            ));
+        }
+
+        if(count($records))
+
+        return $response;
+    }
 
 	/**
 	 * Show the form for creating a new resource.
