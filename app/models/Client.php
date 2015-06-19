@@ -49,4 +49,16 @@ class Client extends Eloquent {
         return Client::$fieldLabels;
     }
 
+    public function getCacheId($type){
+        switch($type){
+            case 'joblist':
+                return $this->id."-joblist-normal";
+            case 'joblist-archive':
+                return $this->id."-joblist-archive";
+        }
+    }
+
+    public function getJobsChId(){
+        return 30543;
+    }
 }
