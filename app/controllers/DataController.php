@@ -485,6 +485,10 @@ class DataController extends BaseController {
             /** @var $jobId int */
             $jobId = $record->getField('ID');
 
+            $markdownCheckbox = $record->getField("MarkdownCheckbox");
+
+            $formatter = (empty($markdownCheckbox) || $markdownCheckbox != "Ja") ? "simple" : "markdown";
+
             if($jobId != intval($record->getField('ID')) || empty($jobId) || $jobId <= 0){
                 //Paneon::debug("Überspringe wegen ungültiger JobId: JobId ".$record->getField('ID').", ProjektName: ".$record->getField('ProjektName'));
                 throw(new Exception("Kein Datensatz gefunden."));
@@ -568,6 +572,7 @@ class DataController extends BaseController {
                 'fm_id'     => $jobId,
                 'visible'   => $visible,
                 'timestamp' => $this->currentTimestamp,
+                'formatter' => $formatter,
                 'start_date' => $startDate,
                 'position'  => $position_name,
                 'industry'  => $branche,
