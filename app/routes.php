@@ -51,6 +51,9 @@ Route::group(array('prefix' => 'data'), function()
     Route::get('{serial}/jobs/all/{type?}', 'DataController@jobListAll')
         ->where('serial', '[A-Za-z\-\d+]+');
 
+    Route::get('{serial}/jobs/external/{format?}', 'DataController@externalJobList')
+        ->where('serial', '[A-Za-z\-\d+]+');
+
     Route::get('/{serial}/job-detail/{jobId}', array(
         'uses' => 'DataController@jobDetail'
     ))
@@ -63,6 +66,14 @@ Route::any('/{serial}/{fmId}', array(
         'as' => 'form',
         'uses' => 'PageController@index'
     ))
+    ->where('serial', '[A-Za-z\-\d+]+')
+    ->where('fmId', '[\d+]+');
+
+// Systemcheck Xing
+Route::any('/systemcheck/{serial}', array(
+    'as' => 'form',
+    'uses' => 'PageController@systemCheck'
+))
     ->where('serial', '[A-Za-z\-\d+]+')
     ->where('fmId', '[\d+]+');
 
