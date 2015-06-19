@@ -157,7 +157,7 @@ class DataController extends BaseController {
                 }
 
                 // Cache the joblist for 24 Hours
-                $expiresAt = Carbon::now()->addHours(24);
+                $expiresAt = Carbon::now()->addHours(1);
 
                 Cache::put($cacheId, $jobList, $expiresAt);
             }
@@ -195,7 +195,7 @@ class DataController extends BaseController {
 
             $cacheId = $this->client->id."-external-".$format;
 
-            if(Cache::has($cacheId) && $cacheForceRefresh == false){
+            if(false && Cache::has($cacheId) && $cacheForceRefresh == false){
                 $jobList = Cache::get($cacheId);
                 $cacheActive = true;
             }
@@ -292,32 +292,114 @@ class DataController extends BaseController {
                     }
                     //Paneon::debug("Sichtbarkeit:", $visible);
 
-                    $row = array(
-                        'fm_id'     => $jobId,
-                        'visible'   => $visible,
-                        'timestamp' => $this->currentTimestamp,
-                        'start_date' => $startDate,
-                        'position'  => $position_name,
-                        'industry'  => $branche,
-                        'location'  => $city,
-                        'contact'   => $web_berater,
-                        'contact_mail'      => $web_berater_email,
-                        'lang'      => ($language == 'Englisch' || strstr($language,"en") ) ? 'en' : 'de',
-                        "full_text" => $searchText,
-                        'rewrite_link' => $rewriteLink,
+                    /*
+                     * Format for jobs.ch
+                     */
+                    if($format == "jobsch"){
 
-                        // Title & Desc
-                        'seo_title' => $title,
-                        'seo_desc' => $google_desc,
+                        $intro = nl2br(trim($intro));
+                        $position = nl2br(trim($position));
+                        $jobDescription = $position;
 
-                        // Detail Daten
-                        "job_intro" => $intro,
-                        "Web_Detailslink" => $detailslink,
-                        "job_description" => $position,
-                        "job_candidate" => $candidate,
-                        "job_resume" => $resume,
-                        "job_desirability" => $attraktivitaet,
-                    );
+                        if($this->client->name == "iRO Stocker"){
+                            /*
+                             *  Intro
+                             */
+                            $intro = str_replace("<br>", "<br />", $intro);
+                            $intro = str_replace("<br/>", "<br />", $intro);
+
+                            $introLines = explode("<br />", $intro);
+
+                            $intro = '<h2>'.$introLines[0].'</h2>';
+                            for($i = 1; count($introLines) > $i; $i++){
+
+                                $intro .= "\n".$introLines[$i];
+                                if(count($introLines) > ($i+1)){
+                                    $intro .= '<br />';
+                                }
+                            }
+
+                            /*
+                             *  Job Description
+                             */
+                            $jobDescription = "";
+
+                            $positionLines = explode("<br />", $position);
+
+                            if(count($positionLines) > 0){
+                                $jobDescription .= '<b>Ihre Aufgaben:</b><br />'."\n".'<ul>';
+                                foreach($positionLines as $line){
+                                    $jobDescription .= "\n".'<li>'.$line.'</li>';
+                                }
+                                $jobDescription .= '</ul>';
+                            }
+
+                            $candidateLines = explode("<br>", $candidate);
+
+                            if(count($candidateLines) > 0){
+                                $jobDescription .= '<b>Ihr Profil:</b><br /><ul>';
+                                foreach($candidateLines as $line){
+                                    $jobDescription .= '<li>'.$line.'</li>';
+                                }
+                                $jobDescription .= '</ul>';
+                            }
+
+                            $resumeLines = explode("<br>", $resume);
+
+                            if(count($resumeLines) > 0){
+                                $jobDescription .= '<b>Ihre Perspektiven:</b><br><ul>';
+                                foreach($resumeLines as $line){
+                                    $jobDescription .= '<li>'.$line.'</li>';
+                                }
+                                $jobDescription .= '</ul>';
+                            }
+
+                        }
+
+                        $row = array(
+                            'ORGANISATIONID' => $this->client->getJobsChId(),
+                            'INSERATID' => trim($jobId),
+                            'VORSPANN' => $this->sanitizeForXML($intro),
+                            'BERUF' => $this->sanitizeForXML(nl2br(trim($title))),
+                            'TEXT' => $this->sanitizeForXML($jobDescription),
+
+                            'ORT' => $this->sanitizeForXML(nl2br(trim($city))),
+                            'KONTAKT' => $this->sanitizeForXML(nl2br(trim($web_berater))),
+                            'EMAIL' => $this->sanitizeForXML(nl2br(trim($web_berater_email))),
+                            'URL' => 'http://www.stocker-hrc.ch/de/ihre-karriere/stellenangebote/detail-stellenangebot/?tx_cfvacancy_job[jobId]='.trim($jobId),
+                        );
+
+                    }
+                    else {
+
+                        $row = array(
+                            'fm_id'     => $jobId,
+                            'visible'   => $visible,
+                            'timestamp' => $this->currentTimestamp,
+                            'start_date' => $startDate,
+                            'position'  => $position_name,
+                            'industry'  => $branche,
+                            'location'  => $city,
+                            'contact'   => $web_berater,
+                            'contact_mail'      => $web_berater_email,
+                            'lang'      => ($language == 'Englisch' || strstr($language,"en") ) ? 'en' : 'de',
+                            "full_text" => $searchText,
+                            'rewrite_link' => $rewriteLink,
+
+                            // Title & Desc
+                            'seo_title' => $title,
+                            'seo_desc' => $google_desc,
+
+                            // Detail Daten
+                            "job_intro" => $intro,
+                            "Web_Detailslink" => $detailslink,
+                            "job_description" => $position,
+                            "job_candidate" => $candidate,
+                            "job_resume" => $resume,
+                            "job_desirability" => $attraktivitaet,
+                        );
+
+                    }
 
                     $jobList[] = $row;
                 }
@@ -342,30 +424,10 @@ class DataController extends BaseController {
                     foreach($jobList as $record){
                         $xmlString .= "\n  ".'<INSERAT>';
 
-                        $row = array(
-                            'ORGANISATIONID' => $this->client->getJobsChId(),
-                            'INSERATID' => $record['fm_id'],
-                            'BERUF' => $record['seo_title'],
-                            'TEXT' => $record['job_description'],
 
-                            'ORT' => $record['location'],
-                            'KONTAKT' => $record['contact'],
-                            'EMAIL' => $record['contact_mail'],
-                            'URL' => 'http://www.stocker-hrc.ch/de/ihre-karriere/stellenangebote/detail-stellenangebot/?tx_cfvacancy_job[jobId]='.$record['fm_id'],
-                        );
-
-                        foreach($row as $key => $value){
+                        foreach($record as $key => $value){
                             if(!empty($value)){
-
-                                $sanitizedValue = str_replace(
-                                    array('&',     "'",      '<',    '>',    '"',      'Ä',      'Ö',      'Ü',      'ä',      'ö',      'ü',      'ß'),
-                                    array('&amp;', '&apos;', '&lt;', '&gt;', '&quot;', '&#196;', '&#214;', '&#220;', '&#228;', '&#246;', '&#252;', '&#223;'),
-                                    $value
-                                );
-                                $sanitizedValue = trim($sanitizedValue);
-                                $sanitizedValue = nl2br($sanitizedValue);
-
-                                $xmlString .= "\n   ".'<'.$key.'>'.$sanitizedValue.'</'.$key.'>';
+                                $xmlString .= "\n   ".'<'.$key.'>'.$value.'</'.$key.'>';
                             }
                         }
 
@@ -407,7 +469,7 @@ class DataController extends BaseController {
             $this->initializeFileMaker();
 
             $findCommand =& $this->fm->newFindCommand('Projektliste_Web');
-            $findCommand->addFindCriterion('Web_Projekt','="Ja"');
+            //$findCommand->addFindCriterion('Web_Projekt','="Ja"');
             $findCommand->addFindCriterion('ID','="'.$jobId.'"');
 
             $result = $findCommand->execute();
@@ -496,6 +558,12 @@ class DataController extends BaseController {
                 default:
                     $visible = PANEON_JOB_TYPE_HIDDEN;
             }
+
+            if($visible == PANEON_JOB_TYPE_HIDDEN){
+                // Only return data to visible or archived projects
+                throw(new Exception("Kein Datensatz gefunden."));
+            }
+
             $jobRow = array(
                 'fm_id'     => $jobId,
                 'visible'   => $visible,
@@ -565,5 +633,25 @@ class DataController extends BaseController {
             $date = $date[2]."-".$date[0]."-".$date[1];
         }
         return $date;
+    }
+
+    private function formatIntro($text){
+        if($this->client->name == "iRO Stocker"){}
+        return $text;
+    }
+
+    private function formatJobDescription($text){
+        if($this->client->name == "iRO Stocker"){
+
+        }
+        return $text;
+    }
+
+    private function sanitizeForXML($text){
+        return str_replace(
+            array('&',     "'",      '<',    '>',    '"',      'Ä',      'Ö',      'Ü',      'ä',      'ö',      'ü',      'ß'),
+            array('&amp;', '&apos;', '&lt;', '&gt;', '&quot;', '&#196;', '&#214;', '&#220;', '&#228;', '&#246;', '&#252;', '&#223;'),
+            $text
+        );
     }
 }
