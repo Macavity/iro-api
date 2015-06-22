@@ -145,15 +145,18 @@ class BaseController extends Controller {
     }
 
     /**
-     * @throws Exception
+     * @param string $sortDirection
      * @return FileMaker_Record[]
+     * @throws Exception
      */
-    protected function findArchivedFileMakerJobs()
+    protected function findArchivedFileMakerJobs($sortDirection = "asc")
     {
+        $sortDirection = ($sortDirection == "asc") ? FILEMAKER_SORT_ASCEND : FILEMAKER_SORT_DESCEND;
+
         $this->fmAction = "findArchivedFileMakerJobs";
         $findCommand =& $this->fm->newFindCommand($this->fmLayout);
         $findCommand->addFindCriterion('Web_Projekt','="Archiv"');
-
+        $findCommand->addSortRule('Start', 1, $sortDirection);
 
         $result = $findCommand->execute();
 
@@ -184,14 +187,18 @@ class BaseController extends Controller {
     }
 
     /**
+     * @param string $sortDirection
      * @throws Exception
      * @return FileMaker_Record[]
      */
-    protected function findPublicFileMakerJobs()
+    protected function findPublicFileMakerJobs($sortDirection = "asc")
     {
+        $sortDirection = ($sortDirection == "asc") ? FILEMAKER_SORT_ASCEND : FILEMAKER_SORT_DESCEND;
+
         $this->fmAction = "findPublicFileMakerJobs";
         $findCommand =& $this->fm->newFindCommand($this->fmLayout);
         $findCommand->addFindCriterion('Web_Projekt','="Ja"');
+        $findCommand->addSortRule('Start', 1, $sortDirection);
 
         $result = $findCommand->execute();
 
