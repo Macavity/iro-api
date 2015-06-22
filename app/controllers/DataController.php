@@ -8,12 +8,22 @@ class DataController extends BaseController {
     protected $serialNumber;
 
 
-    public function jobListAll($serial, $type = "normal")
+    public function jobListAll($serial, $sortDirection = "desc", $type = "normal")
     {
         $cacheId = "empty";
         $cacheActive = false;
 
         $cacheForceRefresh = (Input::get('forceRefresh') == 1);
+
+        // Alter Wert
+        if($sortDirection == "all"){
+            $sortDirection = "desc";
+        }
+
+        if($sortDirection != "desc"){
+            // Default
+            $sortDirection = "asc";
+        }
 
         try {
 
@@ -24,10 +34,10 @@ class DataController extends BaseController {
             $findCommand =& $this->fm->newFindCommand('Projektliste_Web');
 
             if($type == "archiv"){
-                $cacheId = $this->client->id."-joblist-archiv";
+                $cacheId = $this->client->id."-joblist-archiv-".$sortDirection;
             }
             else {
-                $cacheId = $this->client->id."-joblist-normal";
+                $cacheId = $this->client->id."-joblist-normal-".$sortDirection;
             }
 
             if(Cache::has($cacheId) && $cacheForceRefresh == false){
@@ -36,10 +46,10 @@ class DataController extends BaseController {
             }
             else {
                 if($type == "archiv"){
-                    $records = $this->findArchivedFileMakerJobs();
+                    $records = $this->findArchivedFileMakerJobs($sortDirection);
                 }
                 else {
-                    $records = $this->findPublicFileMakerJobs();
+                    $records = $this->findPublicFileMakerJobs($sortDirection);
                 }
 
                 $jobList = array();
@@ -165,6 +175,7 @@ class DataController extends BaseController {
 
             return Response::json(array(
                 'cacheActive' => $cacheActive,
+                'cacheId' => $cacheId,
                 'results' => $jobList,
             ));
         }
