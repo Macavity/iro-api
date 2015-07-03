@@ -59,6 +59,12 @@ Route::group(array('prefix' => 'data'), function()
     ))
         ->where('serial', '[A-Za-z\-\d+]+')
         ->where('jobId', '[\d]+');
+
+    Route::get('{serial}/import/algolia/all', 'AlgoliaController@importAll')
+        ->where('serial', '[A-Za-z\-\d+]+');
+
+    Route::get('{serial}/import/algolia/new', 'AlgoliaController@importModified')
+        ->where('serial', '[A-Za-z\-\d+]+');
 });
 
 // First Page (Form)
