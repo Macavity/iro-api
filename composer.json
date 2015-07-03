@@ -9,7 +9,8 @@
         "twbs/bootstrap": "3.0.*@dev",
         "components/jquery": "1.11.*@dev",
         "barryvdh/laravel-ide-helper": "1.*",
-        "way/generators": "1.0.*@dev"
+        "algolia/algoliasearch-client-php": "1.5.*",
+        "way/generators": "*"
 	},
 	"autoload": {
 		"classmap": [
