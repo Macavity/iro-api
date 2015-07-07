@@ -206,7 +206,7 @@ class DataController extends BaseController {
 
             $cacheId = $this->client->id."-external-".$format;
 
-            if(false && Cache::has($cacheId) && $cacheForceRefresh == false){
+            if(Cache::has($cacheId) && $cacheForceRefresh == false){
                 $jobList = Cache::get($cacheId);
                 $cacheActive = true;
             }
@@ -377,7 +377,7 @@ class DataController extends BaseController {
                             'ORT' => $this->sanitizeForXML(nl2br(trim($city))),
                             'KONTAKT' => $this->sanitizeForXML(nl2br(trim($web_berater))),
                             'EMAIL' => $this->sanitizeForXML(nl2br(trim($web_berater_email))),
-                            'URL' => 'http://www.stocker-hrc.ch/de/ihre-karriere/stellenangebote/detail-stellenangebot/?tx_cfvacancy_job[jobId]='.trim($jobId),
+                            'DIREKT_URL' => 'http://www.stocker-hrc.ch/de/ihre-karriere/stellenangebote/detail-stellenangebot/?tx_cfvacancy_job[jobId]='.trim($jobId),
                         );
 
                     }
