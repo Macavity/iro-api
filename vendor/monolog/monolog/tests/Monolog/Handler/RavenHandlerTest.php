@@ -14,14 +14,13 @@ namespace Monolog\Handler;
 use Monolog\TestCase;
 use Monolog\Logger;
 use Monolog\Formatter\LineFormatter;
-use Monolog\Handler\RavenHandler;
 
 class RavenHandlerTest extends TestCase
 {
     public function setUp()
     {
-        if (!class_exists("Raven_Client")) {
-            $this->markTestSkipped("raven/raven not installed");
+        if (!class_exists('Raven_Client')) {
+            $this->markTestSkipped('raven/raven not installed');
         }
 
         require_once __DIR__ . '/MockRavenClient.php';
@@ -55,7 +54,7 @@ class RavenHandlerTest extends TestCase
         $ravenClient = $this->getRavenClient();
         $handler = $this->getHandler($ravenClient);
 
-        $record = $this->getRecord(Logger::DEBUG, "A test debug message");
+        $record = $this->getRecord(Logger::DEBUG, 'A test debug message');
         $handler->handle($record);
 
         $this->assertEquals($ravenClient::DEBUG, $ravenClient->lastData['level']);
@@ -67,11 +66,58 @@ class RavenHandlerTest extends TestCase
         $ravenClient = $this->getRavenClient();
         $handler = $this->getHandler($ravenClient);
 
-        $record = $this->getRecord(Logger::WARNING, "A test warning message");
+        $record = $this->getRecord(Logger::WARNING, 'A test warning message');
         $handler->handle($record);
 
         $this->assertEquals($ravenClient::WARNING, $ravenClient->lastData['level']);
         $this->assertContains($record['message'], $ravenClient->lastData['message']);
+    }
+
+    public function testTag()
+    {
+        $ravenClient = $this->getRavenClient();
+        $handler = $this->getHandler($ravenClient);
+
+        $tags = array(1, 2, 'foo');
+        $record = $this->getRecord(Logger::INFO, 'test', array('tags' => $tags));
+        $handler->handle($record);
+
+        $this->assertEquals($tags, $ravenClient->lastData['tags']);
+    }
+
+    public function testUserContext()
+    {
+        $ravenClient = $this->getRavenClient();
+        $handler = $this->getHandler($ravenClient);
+
+        $recordWithNoContext = $this->getRecord(Logger::INFO, 'test with default user context');
+        // set user context 'externally'
+
+        $user = array(
+            'id' => '123',
+            'email' => 'test@test.com'
+        );
+
+        $recordWithContext = $this->getRecord(Logger::INFO, 'test', array('user' => $user));
+
+        $ravenClient->user_context(array('id' => 'test_user_id'));
+        // handle context
+        $handler->handle($recordWithContext);
+        $this->assertEquals($user, $ravenClient->lastData['sentry.interfaces.User']);
+
+        // check to see if its reset
+        $handler->handle($recordWithNoContext);
+        $this->assertInternalType('array', $ravenClient->context->user);
+        $this->assertSame('test_user_id', $ravenClient->context->user['id']);
+
+        // handle with null context
+        $ravenClient->user_context(null);
+        $handler->handle($recordWithContext);
+        $this->assertEquals($user, $ravenClient->lastData['sentry.interfaces.User']);
+
+        // check to see if its reset
+        $handler->handle($recordWithNoContext);
+        $this->assertNull($ravenClient->context->user);
     }
 
     public function testException()
@@ -99,7 +145,7 @@ class RavenHandlerTest extends TestCase
         $logFormatter->expects($this->once())->method('formatBatch');
 
         $formatter = $this->getMock('Monolog\\Formatter\\FormatterInterface');
-        $formatter->expects($this->once())->method('format')->with($this->callback(function($record) {
+        $formatter->expects($this->once())->method('format')->with($this->callback(function ($record) {
             return $record['level'] == 400;
         }));
 

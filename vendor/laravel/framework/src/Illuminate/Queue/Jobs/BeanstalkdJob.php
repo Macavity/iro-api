@@ -9,14 +9,14 @@ class BeanstalkdJob extends Job {
 	/**
 	 * The Pheanstalk instance.
 	 *
-	 * @var Pheanstalk
+	 * @var \Pheanstalk_Pheanstalk
 	 */
 	protected $pheanstalk;
 
 	/**
 	 * The Pheanstalk job instance.
 	 *
-	 * @var Pheanstalk_Job
+	 * @var \Pheanstalk_Job
 	 */
 	protected $job;
 
@@ -24,8 +24,8 @@ class BeanstalkdJob extends Job {
 	 * Create a new job instance.
 	 *
 	 * @param  \Illuminate\Container\Container  $container
-	 * @param  Pheanstalk  $pheanstalk
-	 * @param  Pheanstalk_Job  $job
+	 * @param  \Pheanstalk_Pheanstalk  $pheanstalk
+	 * @param  \Pheanstalk_Job  $job
 	 * @param  string  $queue
 	 * @return void
 	 */
@@ -86,6 +86,16 @@ class BeanstalkdJob extends Job {
 	}
 
 	/**
+	 * Bury the job in the queue.
+	 *
+	 * @return void
+	 */
+	public function bury()
+	{
+		$this->pheanstalk->bury($this->job);
+	}
+
+	/**
 	 * Get the number of times the job has been attempted.
 	 *
 	 * @return int
@@ -120,7 +130,7 @@ class BeanstalkdJob extends Job {
 	/**
 	 * Get the underlying Pheanstalk instance.
 	 *
-	 * @return Pheanstalk
+	 * @return \Pheanstalk_Pheanstalk
 	 */
 	public function getPheanstalk()
 	{
@@ -130,7 +140,7 @@ class BeanstalkdJob extends Job {
 	/**
 	 * Get the underlying Pheanstalk job.
 	 *
-	 * @return Pheanstalk_Job
+	 * @return \Pheanstalk_Job
 	 */
 	public function getPheanstalkJob()
 	{

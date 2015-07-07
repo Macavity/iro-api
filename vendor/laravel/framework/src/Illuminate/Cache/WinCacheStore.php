@@ -12,7 +12,7 @@ class WinCacheStore extends TaggableStore implements StoreInterface {
 	/**
 	 * Create a new WinCache store.
 	 *
-	 * @param  string     $prefix
+	 * @param  string  $prefix
 	 * @return void
 	 */
 	public function __construct($prefix = '')
@@ -46,7 +46,7 @@ class WinCacheStore extends TaggableStore implements StoreInterface {
 	 */
 	public function put($key, $value, $minutes)
 	{
-		wincache_ucache_add($this->prefix.$key, $value, $minutes * 60);
+		wincache_ucache_set($this->prefix.$key, $value, $minutes * 60);
 	}
 
 	/**
@@ -54,7 +54,7 @@ class WinCacheStore extends TaggableStore implements StoreInterface {
 	 *
 	 * @param  string  $key
 	 * @param  mixed   $value
-	 * @return void
+	 * @return int|bool
 	 */
 	public function increment($key, $value = 1)
 	{
@@ -66,7 +66,7 @@ class WinCacheStore extends TaggableStore implements StoreInterface {
 	 *
 	 * @param  string  $key
 	 * @param  mixed   $value
-	 * @return void
+	 * @return int|bool
 	 */
 	public function decrement($key, $value = 1)
 	{

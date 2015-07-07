@@ -36,13 +36,6 @@ class Connection implements ConnectionInterface {
 	protected $username;
 
 	/**
-	 * The authentication credential set.
-	 *
-	 * @var array
-	 */
-	protected $auth;
-
-	/**
 	 * All of the defined tasks.
 	 *
 	 * @var array
@@ -213,9 +206,7 @@ class Connection implements ConnectionInterface {
 	{
 		if ( ! is_null($callback)) return $callback;
 
-		$me = $this;
-
-		return function($line) use ($me) { $me->display($line); };
+		return function($line) { $this->display($line); };
 	}
 
 	/**
@@ -232,15 +223,14 @@ class Connection implements ConnectionInterface {
 	 * Get the gateway implementation.
 	 *
 	 * @return \Illuminate\Remote\GatewayInterface
+	 *
+	 * @throws \RuntimeException
 	 */
 	public function getGateway()
 	{
-		if ( ! $this->gateway->connected())
+		if ( ! $this->gateway->connected() && ! $this->gateway->connect($this->username))
 		{
-			if ( ! $this->gateway->connect($this->username))
-			{
-				throw new \RuntimeException("Unable to connect to remote server.");
-			}
+			throw new \RuntimeException("Unable to connect to remote server.");
 		}
 
 		return $this->gateway;
