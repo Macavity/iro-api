@@ -1,3 +1,82 @@
+## v1.2.3 (2015-06-25)
+
+- fix mb_strrpos shim with negative offset
+- sync tests with latest PHP/HHVM behaviors
+- remove PHP7/HHVM from allowed failures
+- move to PSR-1+2+4
+- mv class/ src/
+
+## v1.2.2 (2015-04-26)
+
+- Fix ucwords to be functionally the same as in-built PHP version
+- Fix iconv_set_encoding deprecation notice in PHP 5.6.0
+- remove legacy test for HHVM/PHP7
+- mb_parse_str() should have no return value
+
+## v1.2.1 (2015-01-28)
+
+- fix double declaration in mbstring shim
+
+## v1.2.0 (2015-01-12)
+
+- add u::strwidth() to get the width of a string when printed on a terminal
+- add more mbstring shims
+- add a note about https://bugs.php.net/65358
+- fail properly when COM is not loaded
+- fallback on stat() when lstat() fails
+
+## v1.2.0-beta (2014-08-05)
+
+- add best-fit mappings for UTF-8 to Code Page approximations
+- add portable Unicode filesystem access under Windows and other OSes
+
+## v1.1.29 (2015-04-26)
+
+- fix ucwords to be functionally the same as in-built PHP version
+- fix iconv_set_encoding deprecation notice in PHP 5.6.0
+- remove legacy test for HHVM/PHP7
+
+## v1.1.28 (2015-01-12)
+
+- fix mbstring shim for html-entities
+
+## v1.1.27 (2015-01-11)
+
+- update to Unicode 7.0
+- fix iconv shim compat layer
+
+## v1.1.26 (2014-11-08)
+
+- tweak composer.json
+
+## v1.1.25 (2014-08-05)
+
+- update travis matrix
+- add composer branch alias
+
+## v1.1.24 (2014-06-17)
+
+- update tests for latest HHVM fixes
+- move legacy GRAPHEME_CLUSTER_RX version to Intl shim
+
+## v1.1.23 (2014-05-22)
+
+- enable tests for PHP 5.6
+- remove HHVM from allowed failures
+
+## v1.1.22 (2014-05-06)
+
+- fix #19: don't call ini_set() when not required and gain compat with PHP5.6
+
+## v1.1.21 (2014-03-26)
+
+- fix #18 u::wordwrap() now relies on native behavior
+
+## v1.1.20 (2014-03-01)
+## v1.1.19 (2014-03-01)
+
+- fix mb_regex_encoding() being disabled on some hosting providers
+
 ## v1.1.18 (2014-02-02)
 
 - require PCRE>=7.3, the first that correctly checks UTF-8 validity
