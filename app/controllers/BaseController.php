@@ -4,7 +4,7 @@
 /**
  * Non-namespaced version of FileMaker 12 PHP API
  */
-include_once(base_path().'/app/libraries/filemaker-12/FileMaker.php');
+//include_once(base_path().'/app/libraries/filemaker-12/FileMaker.php');
 
 require_once(base_path().'/app/libraries/Paneon/PaneonHelper/Paneon.php');
 
@@ -16,7 +16,6 @@ require_once(base_path().'/app/libraries/Paneon/PaneonHelper/Paneon.php');
 define('PANEON_JOB_TYPE_HIDDEN', 0);
 define('PANEON_JOB_TYPE_NORMAL', 1);
 define('PANEON_JOB_TYPE_ARCHIVE', 2);
-
 
 class BaseController extends Controller {
 
@@ -43,7 +42,11 @@ class BaseController extends Controller {
 
     protected $fmRecordId = 0;
 
-
+    /**
+     * Google Analytics Measurement Protocol
+     * @var
+     */
+    protected $gamp = null;
 
     /**
      * @var Client
@@ -91,6 +94,10 @@ class BaseController extends Controller {
         if(!$this->client)
         {
             throw(new Exception("Seriennummer ungültig."));
+        }
+
+        if(!$this->gamp){
+            $this->gamp = GAMP::setClientId($this->client->id);
         }
 
     }
