@@ -31,7 +31,7 @@ return [
     | https://developers.google.com/analytics/devguides/collection/protocol/v1/parameters#tid
     |
     */
-    'tracking_id' => 'UA-63787585-1',
+    'tracking_id' => 'UA-24950655-2',
 
     /*
     |--------------------------------------------------------------------------
@@ -80,7 +80,7 @@ return [
     | Valid Values: (Boolean) "true" OR "false"
     |
     */
-    'anonymize_ip' => false,
+    'anonymize_ip' => true,
 
     /*
     |--------------------------------------------------------------------------
