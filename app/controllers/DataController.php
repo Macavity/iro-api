@@ -7,13 +7,14 @@ class DataController extends BaseController {
 
     protected $serialNumber;
 
-
     public function jobListAll($serial, $sortDirection = "desc", $type = "normal")
     {
         $cacheId = "empty";
         $cacheActive = false;
 
         $cacheForceRefresh = (Input::get('forceRefresh') == 1);
+
+
 
         // Alter Wert
         if($sortDirection == "all"){
@@ -33,6 +34,7 @@ class DataController extends BaseController {
 
             $findCommand =& $this->fm->newFindCommand('Projektliste_Web');
 
+
             if($type == "archiv"){
                 $cacheId = $this->client->id."-joblist-archiv-".$sortDirection;
             }
@@ -43,23 +45,28 @@ class DataController extends BaseController {
             if(Cache::has($cacheId) && $cacheForceRefresh == false){
                 $jobList = Cache::get($cacheId);
                 $cacheActive = true;
+                $this->log("Cache active");
             }
             else {
                 if($type == "archiv"){
+                    $this->log("find Archived Jobs");
                     $records = $this->findArchivedFileMakerJobs($sortDirection);
                 }
                 else {
+                    $this->log("find Public Jobs");
                     $records = $this->findPublicFileMakerJobs($sortDirection);
                 }
 
                 $jobList = array();
-
+                $this->log("Foreach records");
                 foreach($records as $record){
 
                     /** @var $record FileMaker_Record */
 
                     /** @var $jobId int */
                     $jobId = $record->getField('ID');
+
+                    //$this->log("Job ID:".$jobId);
 
                     if($jobId != intval($record->getField('ID')) || empty($jobId) || $jobId <= 0){
                         continue;
@@ -113,10 +120,10 @@ class DataController extends BaseController {
                     else{
                         $title = $google_title;
                     }
-                    $title = Paneon::removeHTML($title);
+                    $title = Paneon\PaneonHelper\Paneon::removeHTML($title);
 
 
-                    //Paneon::debug("Jobtitel:", $title);
+                    //$this->log("Jobtitel:".$title);
 
                     /*
                      * Sichtbarkeit des Datensatzes
@@ -165,11 +172,12 @@ class DataController extends BaseController {
 
                     $jobList[] = $row;
                 }
-
+                $this->log("foreach end");
                 // Cache the joblist for 24 Hours
                 $expiresAt = Carbon::now()->addHours(1);
 
                 Cache::put($cacheId, $jobList, $expiresAt);
+                $this->log("cached ($cacheId) for 1h");
             }
 
 
@@ -183,8 +191,10 @@ class DataController extends BaseController {
             return Response::json(array(
                 'error' => $e->getMessage(),
                 'code' => $e->getCode(),
+                'serial' => $serial,
                 'cacheId' => $cacheId,
                 'cacheActive' => $cacheActive,
+                'log' => $this->getLog(),
             ));
         }
 
