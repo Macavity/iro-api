@@ -6,7 +6,7 @@
  */
 //include_once(base_path().'/app/libraries/filemaker-12/FileMaker.php');
 
-require_once(base_path().'/app/libraries/Paneon/PaneonHelper/Paneon.php');
+//use Paneon\FileMaker12;
 
 /*
  *---------------------------------------------------------------
@@ -60,6 +60,13 @@ class BaseController extends Controller {
 
     protected $fmXingLink;
 
+    protected $currentTimestamp;
+    protected $log = array();
+
+    public function __construct(){
+        $this->currentTimestamp = time();
+    }
+
     /**
      * Show an error alert page
      *
@@ -93,6 +100,10 @@ class BaseController extends Controller {
 
         if(!$this->client)
         {
+            $any = Client::all();
+
+            print_r($any);
+
             throw(new Exception("Seriennummer ungültig."));
         }
 
@@ -149,6 +160,14 @@ class BaseController extends Controller {
         $records = $result->getRecords();
 
         return $records;
+    }
+
+    protected function log($string){
+        $this->log[] = $string;
+    }
+
+    protected function getLog(){
+        return $this->log;
     }
 
     /**

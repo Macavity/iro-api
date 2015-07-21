@@ -22,8 +22,9 @@
 			"app/tests/TestCase.php",
             "app/libraries"
 		],
-        "psr-0": {
-            "Paneon": "app/libraries"
+        "psr-4": {
+            "Paneon\\": "app/libraries/Paneon/",
+            "": "app/libraries/filemaker-12/"
         }
 	},
 	"scripts": {

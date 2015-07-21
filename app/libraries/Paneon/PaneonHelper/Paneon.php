@@ -1,5 +1,7 @@
 <?php
 
+namespace Paneon\PaneonHelper;
+
 class Paneon {
 
     public static function debug($label, $data = "", $logLevel = 3){
