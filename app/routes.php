@@ -104,7 +104,16 @@ Route::get('/debug/fm', function(){
     $findCommand = $fm->newFindAnyCommand('Projektliste_Web');
 
     $result = $findCommand->execute();
-    print_r($result);
+
+    $resultString = print_r($result, true);
+
+    $resultString = str_replace("xs4web_pape","****", $resultString);
+    $resultString = str_replace("web_pape","****", $resultString);
+
+    echo "\n<br>getFoundSetCount:".$result->getFoundSetCount();
+    echo "\n<br>getFetchCount:".$result->getFetchCount();
+
+    \Paneon\PaneonHelper\Paneon::debug($resultString);
 });
 
 Route::get('debug/test', function(){
@@ -119,7 +128,6 @@ Route::get('debug/test', function(){
     curl_close($curlHandle);
 
 });
-
 
 App::missing(function($exception) {
     // shows an error page (app/views/error.blade.php)
