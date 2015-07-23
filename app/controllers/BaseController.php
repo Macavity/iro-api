@@ -229,7 +229,6 @@ class BaseController extends Controller {
         $findCommand->addFindCriterion('Web_Projekt','="Ja"');
         $findCommand->addSortRule('Start', 1, $sortDirection);
 
-        $findCommand->setRange(0,60);
 
         try {
             $result = $findCommand->execute();
@@ -388,6 +387,24 @@ class BaseController extends Controller {
         }
     }
 
+    protected function trackJoblistAction($action){
+        $gamp = new Analytics();
+
+        $response = $gamp->setProtocolVersion(1)
+            ->setAsyncRequest(true)
+            ->setTrackingId( $this->gampTrackingId )
+            ->setClientId( $this->getTrackedClientId() )
+            ->setUserId( $this->client->db_name )
+            ->setIpOverride( $_SERVER["REMOTE_ADDR"] )
+            ->setDocumentHostName($_SERVER['HTTP_HOST'])
+            // Page Hit
+            ->setDocumentPath( '/'.$this->client->id.'/' )
+            // Event
+            ->setEventCategory("joblist")
+            ->setEventAction( $action )
+            ->sendEvent();
+    }
+
     protected function trackPageHit($url){
 
         $gamp = new Analytics();
@@ -400,7 +417,7 @@ class BaseController extends Controller {
             ->setIpOverride( $_SERVER["REMOTE_ADDR"] )
             ->setDocumentHostName($_SERVER['HTTP_HOST'])
             // Page Hit
-            ->setDocumentPath( '/'.$this->client->id.'-'.$url );
+            ->setDocumentPath( '/'.$this->client->id.$url );
         $response = $gamp->sendPageview();
 
 
@@ -420,8 +437,10 @@ class BaseController extends Controller {
             ->setUserId( $this->client->db_name )
             ->setIpOverride( $_SERVER["REMOTE_ADDR"] )
             ->setDocumentHostName($_SERVER['HTTP_HOST'])
+            // Page Hit
+            ->setDocumentPath( '/'.$this->client->id.'/' )
             // Event
-            ->setEventCategory( $this->client->id.'-'.$category )
+            ->setEventCategory( $category )
             ->setEventAction( $action )
             ->sendEvent();
         //Paneon\PaneonHelper\Paneon::debug("gamp",$response);
