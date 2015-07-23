@@ -4,35 +4,91 @@ class AlgoliaController extends BaseController {
 
     protected $serialNumber;
 
-    public function import($serial, $sortDirection = "desc", $type = "normal")
+    /**
+     * @var AlgoliaSearch\Client
+     */
+    private $searchClient;
+
+    /**
+     * @var AlgoliaSearch\Index
+     */
+    private $searchIndex;
+
+    private $searchIndexName;
+
+    public function initSearchClient(){
+        $this->searchClient = new AlgoliaSearch\Client("52TJDTSW2T", "8a93393a5414d81d7acb2c88b663621f");
+
+        // Pape
+        if($this->client->id == 2){
+            $this->searchIndexName = 'pape';
+        }
+        else {
+            return Response::view('error', array(), 404);
+        }
+    }
+
+    public function import($serial, $type = "new")
     {
+        set_time_limit(0);
+        ini_set('max_execution_time', '0');
+
         try {
 
             $this->initClient($serial);
+
+            $this->initSearchClient();
+
+            $this->searchIndex = $this->searchClient->initIndex($this->searchIndexName);
 
             $this->initializeFileMaker();
 
             $findCommand =& $this->fm->newFindCommand('Projektliste_Web');
 
-            if($type == "archiv"){
-                $records = $this->findArchivedFileMakerJobs($sortDirection);
-            }
-            else {
-                $records = $this->findPublicFileMakerJobs($sortDirection);
+            $lastModified = $this->client->getAttribute("last_modified");
+
+            if(empty($lastModified) || $lastModified == false){
+                $type = "all";
             }
 
-           return Response::json(array(
-                'cacheActive' => $cacheActive,
-                'cacheId' => $cacheId,
-                'results' => $jobList,
+            if($type == "all"){
+                // Rare Call: Get all Public Projects
+                $records = $this->findPublicFileMakerJobs();
+            }
+            else{
+                // Common Call: Get last changed and then retrieve only changed records
+                $records = $this->findModifiedPublicJobs($lastModified);
+            }
+
+            $projects = array();
+
+            if(FileMaker::isError($records) == false){
+                foreach($records as $record){
+
+                    try {
+                        $job = new Job($record);
+                        $projects[] = $job->getData();
+                    }
+                    catch(Exception $e){
+                        $this->log($e->getMessage());
+                        break;
+                    }
+
+
+                }
+                $this->searchIndex->saveObjects($projects);
+                $this->log("Imported ".count($projects)." projects into ".$this->searchIndexName);
+            }
+
+            return Response::json(array(
+                'projects' => $projects,
+                'log' => $this->getLog(),
             ));
         }
         catch(Exception $e){
             return Response::json(array(
                 'error' => $e->getMessage(),
                 'code' => $e->getCode(),
-                'cacheId' => $cacheId,
-                'cacheActive' => $cacheActive,
             ));
         }
 
