@@ -31,8 +31,6 @@ class DataController extends BaseController {
 
             $this->initClient($serial);
 
-            $this->trackPageHit('/jobs/'.$sortDirection.'/'.$type);
-
             $this->initializeFileMaker();
 
             //$findCommand =& $this->fm->newFindCommand('Projektliste_Web');
@@ -49,15 +47,18 @@ class DataController extends BaseController {
                 $cacheActive = true;
                 $this->log("Cache active");
 
+                $this->trackPageHit('/jobs/'.$sortDirection.'/'.$type.'/Cached');
                 $this->trackEvent('joblist', 'cached call');
 
             }
             else {
                 if($cacheForceRefresh){
                     $this->trackEvent('joblist', 'forced refresh');
+                    $this->trackPageHit('/jobs/'.$sortDirection.'/'.$type.'/forcedRefresh');
                 }
                 else {
                     $this->trackEvent('joblist', 'normal refresh');
+                    $this->trackPageHit('/jobs/'.$sortDirection.'/'.$type.'/Fresh');
                 }
 
                 if($type == "archiv"){
@@ -236,14 +237,14 @@ class DataController extends BaseController {
             if (Cache::has($cacheId) && $cacheForceRefresh == false) {
                 $jobList = Cache::get($cacheId);
                 $cacheActive = true;
-                $this->trackEvent('joblist_extern', 'cached call');
+                $this->trackEvent('joblist_extern_'.$format, 'cached call');
             }
             else {
                 if($cacheForceRefresh){
-                    $this->trackEvent('joblist_extern', 'forced refresh');
+                    $this->trackEvent('joblist_extern_'.$format, 'forced refresh');
                 }
                 else {
-                    $this->trackEvent('joblist_extern', 'normal refresh');
+                    $this->trackEvent('joblist_extern_'.$format, 'normal refresh');
                 }
                 $records = $this->findExternalFileMakerJobs();
 
@@ -519,12 +520,12 @@ class DataController extends BaseController {
 
             $this->initializeFileMaker();
 
-            $this->trackPageHit('/data/'.$this->client->id.'/job-detail/'.$jobId);
+            $this->trackPageHit('/data/job-detail/'.$jobId);
 
-            $this->trackEvent('job-detail', $this->client->id.'-'.$jobId);
+            $this->trackEvent('job-detail', $jobId);
 
             $findCommand =& $this->fm->newFindCommand('Projektliste_Web');
-            //$findCommand->addFindCriterion('Web_Projekt','="Ja"');
+           //$findCommand->addFindCriterion('Web_Projekt','="Ja"');
             $findCommand->addFindCriterion('ID','="'.$jobId.'"');
 
             $result = $findCommand->execute();
