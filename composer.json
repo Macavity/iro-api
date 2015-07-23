@@ -4,11 +4,12 @@
 	"keywords": ["framework", "laravel"],
 	"license": "MIT",
 	"require": {
-		"laravel/framework": "4.1.*",
+		"laravel/framework": "4.2.*",
         "twbs/bootstrap-sass": "3.1.*@dev",
         "twbs/bootstrap": "3.0.*@dev",
         "components/jquery": "1.11.*@dev",
         "barryvdh/laravel-ide-helper": "1.*",
+        "irazasyed/laravel-gamp": "0.5",
         "algolia/algoliasearch-client-php": "1.5.*",
         "way/generators": "*"
 	},
@@ -22,8 +23,9 @@
 			"app/tests/TestCase.php",
             "app/libraries"
 		],
-        "psr-0": {
-            "Paneon": "app/libraries"
+        "psr-4": {
+            "Paneon\\": "app/libraries/Paneon/",
+            "": "app/libraries/filemaker-12/"
         }
 	},
 	"scripts": {
