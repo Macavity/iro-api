@@ -115,6 +115,8 @@ return array(
         // Jeremy Way, Generators
         'Way\Generators\GeneratorsServiceProvider',
 
+        // GAMP
+        'Irazasyed\LaravelGAMP\LaravelGAMPServiceProvider'
 	),
 
 	/*
@@ -181,7 +183,9 @@ return array(
 		'URL'             => 'Illuminate\Support\Facades\URL',
 		'Validator'       => 'Illuminate\Support\Facades\Validator',
 		'View'            => 'Illuminate\Support\Facades\View',
-        'Paneon'          => ''
+
+        // GAMP
+        'GAMP'            => 'Irazasyed\LaravelGAMP\Facades\GAMP',
 
 	),
 

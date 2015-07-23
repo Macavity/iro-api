@@ -1,17 +1,20 @@
-<?php
+<?php 
+
+use Illuminate\Support\Facades\Config;
 
 return array(
 
     /*
     |--------------------------------------------------------------------------
-    | Filename
+    | Filename & Format
     |--------------------------------------------------------------------------
     |
-    | The default path to the helper file
+    | The default filename (without extension) and the format (php or json)
     |
     */
 
-    'filename' => '_ide_helper.php',
+    'filename'  => '_ide_helper',
+    'format'    => 'php',
 
     /*
     |--------------------------------------------------------------------------
@@ -27,6 +30,20 @@ return array(
 
     'helper_files' => array(
         base_path().'/vendor/laravel/framework/src/Illuminate/Support/helpers.php',
+    ),
+
+    /*
+    |--------------------------------------------------------------------------
+    | Model locations to include
+    |--------------------------------------------------------------------------
+    |
+    | Define in which directories the ide-helper:models command should look
+    | for models.
+    |
+    */
+
+    'model_locations' => array(
+        'app/models',
     ),
 
 
@@ -56,6 +73,20 @@ return array(
             'alert'     => 'Monolog\Logger::addAlert',
             'emergency' => 'Monolog\Logger::addEmergency',
         )
+    ),
+    
+    /*
+    |--------------------------------------------------------------------------
+    | Interface implementations
+    |--------------------------------------------------------------------------
+    |
+    | These interfaces will be replaced with the implementing class. Some interfaces
+    | are detected by the helpers, others can be listed below.
+    |
+    */
+    
+    'interfaces' => array(
+        '\Illuminate\Auth\UserInterface' => Config::get('auth.model', 'User'),
     )
 
 );
