@@ -61,10 +61,16 @@ Route::group(array('prefix' => 'data'), function()
         ->where('serial', '[A-Za-z\-\d+]+')
         ->where('jobId', '[\d]+');
 
-    Route::get('{serial}/import/algolia/all', 'AlgoliaController@importAll')
+    Route::get('{serial}/import/search/{type?}', 'AlgoliaController@import')
         ->where('serial', '[A-Za-z\-\d+]+');
+});
 
-    Route::get('{serial}/import/algolia/new', 'AlgoliaController@importModified')
+// ===============================================
+// Search Engine (Premium)========================
+// ===============================================
+Route::group(array('prefix' => 'search'), function()
+{
+    Route::get('{serial}/import/{type?}', 'AlgoliaController@import')
         ->where('serial', '[A-Za-z\-\d+]+');
 });
 

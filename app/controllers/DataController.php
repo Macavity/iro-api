@@ -161,6 +161,7 @@ class DataController extends BaseController {
                         'fm_id'     => $jobId,
                         'visible'   => $visible,
                         'timestamp' => $this->currentTimestamp,
+                        'last_modified' => $record->getField('AenderungZeitstempel'),
                         'start_date' => $startDate,
                         'position'  => $position_name,
                         'industry'  => $branche,
