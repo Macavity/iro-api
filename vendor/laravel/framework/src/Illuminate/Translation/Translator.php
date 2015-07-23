@@ -89,7 +89,7 @@ class Translator extends NamespacedItemResolver implements TranslatorInterface {
 		// If the line doesn't exist, we will return back the key which was requested as
 		// that will be quick to spot in the UI if language keys are wrong or missing
 		// from the application's language files. Otherwise we can return the line.
-		if (is_null($line)) return $key;
+		if ( ! isset($line)) return $key;
 
 		return $line;
 	}
@@ -145,7 +145,7 @@ class Translator extends NamespacedItemResolver implements TranslatorInterface {
 	 */
 	protected function sortReplacements(array $replace)
 	{
-		return with(new Collection($replace))->sortBy(function($r)
+		return (new Collection($replace))->sortBy(function($r)
 		{
 			return mb_strlen($r) * -1;
 		});
@@ -261,6 +261,7 @@ class Translator extends NamespacedItemResolver implements TranslatorInterface {
 	/**
 	 * Get the array of locales to be checked.
 	 *
+	 * @param  string|null  $locale
 	 * @return array
 	 */
 	protected function parseLocale($locale)
@@ -269,10 +270,8 @@ class Translator extends NamespacedItemResolver implements TranslatorInterface {
 		{
 			return array_filter(array($locale, $this->fallback));
 		}
-		else
-		{
-			return array_filter(array($this->locale, $this->fallback));
-		}
+
+		return array_filter(array($this->locale, $this->fallback));
 	}
 
 	/**
@@ -343,7 +342,7 @@ class Translator extends NamespacedItemResolver implements TranslatorInterface {
 	}
 
 	/**
-	 * Set the fallback locale being used.
+	 * Get the fallback locale being used.
 	 *
 	 * @return string
 	 */

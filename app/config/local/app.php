@@ -28,7 +28,7 @@ return array(
 	|
 	*/
 
-	'url' => 'http://api-dev.paneon.de',
+	'url' => 'http://local.api.paneon.de',
 
 	/*
 	|--------------------------------------------------------------------------
@@ -115,6 +115,8 @@ return array(
         // Jeremy Way, Generators
         'Way\Generators\GeneratorsServiceProvider',
 
+        // GAMP
+        'Irazasyed\LaravelGAMP\LaravelGAMPServiceProvider'
 	),
 
 	/*
@@ -180,6 +182,8 @@ return array(
 		'URL'             => 'Illuminate\Support\Facades\URL',
 		'Validator'       => 'Illuminate\Support\Facades\Validator',
 		'View'            => 'Illuminate\Support\Facades\View',
+        // GAMP
+        'GAMP'            => 'Irazasyed\LaravelGAMP\Facades\GAMP',
 	),
 
 );
