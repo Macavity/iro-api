@@ -4,9 +4,10 @@
 /**
  * Non-namespaced version of FileMaker 12 PHP API
  */
-include_once(base_path().'/app/libraries/filemaker-12/FileMaker.php');
+//include_once(base_path().'/app/libraries/filemaker-12/FileMaker.php');
 
-require_once(base_path().'/app/libraries/Paneon/PaneonHelper/Paneon.php');
+//use Paneon\FileMaker12;
+use TheIconic\Tracking\GoogleAnalytics\Analytics;
 
 /*
  *---------------------------------------------------------------
@@ -16,7 +17,6 @@ require_once(base_path().'/app/libraries/Paneon/PaneonHelper/Paneon.php');
 define('PANEON_JOB_TYPE_HIDDEN', 0);
 define('PANEON_JOB_TYPE_NORMAL', 1);
 define('PANEON_JOB_TYPE_ARCHIVE', 2);
-
 
 class BaseController extends Controller {
 
@@ -43,7 +43,13 @@ class BaseController extends Controller {
 
     protected $fmRecordId = 0;
 
+    /**
+     * Google Analytics Measurement Protocol
+     * @var TheIconic\Tracking\GoogleAnalytics\Analytics
+     */
+    protected $gamp = false;
 
+    protected $gampTrackingId = "UA-24950655-2";
 
     /**
      * @var Client
@@ -56,6 +62,13 @@ class BaseController extends Controller {
     protected $serialNumber = "";
 
     protected $fmXingLink;
+
+    protected $currentTimestamp;
+    protected $log = array();
+
+    public function __construct(){
+        $this->currentTimestamp = time();
+    }
 
     /**
      * Show an error alert page
@@ -90,8 +103,13 @@ class BaseController extends Controller {
 
         if(!$this->client)
         {
+            $any = Client::all();
+
+            print_r($any);
+
             throw(new Exception("Seriennummer ungültig."));
         }
+
 
     }
 
@@ -144,6 +162,14 @@ class BaseController extends Controller {
         return $records;
     }
 
+    protected function log($string){
+        $this->log[] = $string;
+    }
+
+    protected function getLog(){
+        return $this->log;
+    }
+
     /**
      * @param string $sortDirection
      * @return FileMaker_Record[]
@@ -193,20 +219,29 @@ class BaseController extends Controller {
      */
     protected function findPublicFileMakerJobs($sortDirection = "asc")
     {
-        $sortDirection = ($sortDirection == "asc") ? FILEMAKER_SORT_ASCEND : FILEMAKER_SORT_DESCEND;
+        error_reporting(E_ALL);
+        ini_set('display_errors', 'On');
 
+
+        $sortDirection = ($sortDirection == "asc") ? FILEMAKER_SORT_ASCEND : FILEMAKER_SORT_DESCEND;
         $this->fmAction = "findPublicFileMakerJobs";
         $findCommand =& $this->fm->newFindCommand($this->fmLayout);
         $findCommand->addFindCriterion('Web_Projekt','="Ja"');
         $findCommand->addSortRule('Start', 1, $sortDirection);
 
-        $result = $findCommand->execute();
 
-        $this->fmErrorHandling($result);
+        try {
+            $result = $findCommand->execute();
+            $this->fmErrorHandling($result);
 
-        $records = $result->getRecords();
+            $records = $result->getRecords();
 
-        return $records;
+            return $records;
+        }
+        catch(Exception $e){
+            die($e->getMessage());
+        }
+
     }
 
     /**
@@ -350,5 +385,93 @@ class BaseController extends Controller {
 
             return $record;
         }
+    }
+
+    protected function trackJoblistAction($action){
+        $gamp = new Analytics();
+
+        $response = $gamp->setProtocolVersion(1)
+            ->setAsyncRequest(true)
+            ->setTrackingId( $this->gampTrackingId )
+            ->setClientId( $this->getTrackedClientId() )
+            ->setUserId( $this->client->db_name )
+            ->setIpOverride( $_SERVER["REMOTE_ADDR"] )
+            ->setDocumentHostName($_SERVER['HTTP_HOST'])
+            // Page Hit
+            ->setDocumentPath( '/'.$this->client->id.'/' )
+            // Event
+            ->setEventCategory("joblist")
+            ->setEventAction( $action )
+            ->sendEvent();
+    }
+
+    protected function trackPageHit($url){
+
+        $gamp = new Analytics();
+
+        $gamp->setProtocolVersion(1)
+            ->setAsyncRequest(true)
+            ->setTrackingId( $this->gampTrackingId )
+            ->setClientId( $this->getTrackedClientId() )
+            ->setUserId( $this->client->db_name )
+            ->setIpOverride( $_SERVER["REMOTE_ADDR"] )
+            ->setDocumentHostName($_SERVER['HTTP_HOST'])
+            // Page Hit
+            ->setDocumentPath( '/'.$this->client->id.$url );
+        $response = $gamp->sendPageview();
+
+
+
+        //Paneon\PaneonHelper\Paneon::debug("gamp",$response);
+
+    }
+
+    protected function trackEvent($category, $action){
+
+        $gamp = new Analytics();
+
+        $response = $gamp->setProtocolVersion(1)
+            ->setAsyncRequest(true)
+            ->setTrackingId( $this->gampTrackingId )
+            ->setClientId( $this->getTrackedClientId() )
+            ->setUserId( $this->client->db_name )
+            ->setIpOverride( $_SERVER["REMOTE_ADDR"] )
+            ->setDocumentHostName($_SERVER['HTTP_HOST'])
+            // Page Hit
+            ->setDocumentPath( '/'.$this->client->id.'/' )
+            // Event
+            ->setEventCategory( $category )
+            ->setEventAction( $action )
+            ->sendEvent();
+        //Paneon\PaneonHelper\Paneon::debug("gamp",$response);
+    }
+
+    // Handle the parsing of the _ga cookie or setting it to a unique identifier
+    protected function getTrackedClientId() {
+        /*if (isset($_COOKIE['_ga'])) {
+            list($version,$domainDepth, $cid1, $cid2) = preg_split('[\.]', $_COOKIE["_ga"],4);
+            $contents = array('version' => $version, 'domainDepth' => $domainDepth, 'cid' => $cid1.'.'.$cid2);
+            $cid = $contents['cid'];
+        }
+        else {*/
+            $cid = $this->client->serial;
+        //}
+        return $cid;
+    }
+
+    public function removeHTML($text){
+
+        // FM 12 liefert decodierte Entities
+        $text = html_entity_decode($text);
+
+
+        // Alle Tags entfernen
+        $text = strip_tags($text);
+
+        $text = str_replace("&lt;br&gt;", "", $text);
+        $text = str_replace("&amp;lt;br&amp;gt;", "", $text);
+
+
+        return $text;
     }
 }
