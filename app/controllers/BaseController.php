@@ -246,7 +246,7 @@ class BaseController extends Controller {
 
     protected function findModifiedPublicJobs($lastModified)
     {
-        $this->log("findModifiedPublicJobs");
+        $this->log("findModifiedPublicJobs ".$lastModified);
         $findCommand =& $this->fm->newFindCommand($this->fmLayout);
         $findCommand->addFindCriterion('Web_Projekt','="Ja"');
         $findCommand->addFindCriterion('AenderungZeitstempel', '>'.$lastModified);
