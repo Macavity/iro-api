@@ -34,6 +34,8 @@ class Job extends Eloquent {
      */
     private $record;
 
+    private $log = array();
+
     /**
      * @param FileMaker_Record $record
      * @throws Exception
@@ -127,12 +129,30 @@ class Job extends Eloquent {
         }
         //Paneon::debug("Sichtbarkeit:", $visible);
 
+        /**
+         * Last Modified
+         */
+        try {
+            $fmZeitstempel = $record->getField('AenderungZeitstempel');
+            $dateTime = Paneon\PaneonHelper\Paneon::fm12TimeToTimestamp($fmZeitstempel);
+
+            $lastModified = $dateTime->getTimestamp();
+            $lastModifiedReadable = $dateTime->format("d.m.Y H:i:s");
+        }
+        catch(Exception $e){
+            $this->log($e->getMessage());
+            $fmZeitstempel = "";
+            $lastModified = 0;
+            $lastModifiedReadable = "";
+        }
+
         $row = array(
             'objectID'     => $jobId,
             'fm_id'     => $jobId,
             'visible'   => $visible,
-            'timestamp' => time(),
-            'last_modified' => $record->getField('AenderungZeitstempel'),
+            'last_modified_date' => $lastModifiedReadable,
+            'last_modified' => $lastModified,
+            //'last_modified_fm' => $fmZeitstempel,
             'start_date' => $startDate,
             'position'  => $position_name,
             'industry'  => $branche,
@@ -140,7 +160,7 @@ class Job extends Eloquent {
             'contact'   => $web_berater,
             'mail'      => $web_berater_email,
             'lang'      => ($language == 'Englisch' || strstr($language,"en") ) ? 'en' : 'de',
-            "full_text" => $searchText,
+            //"full_text" => $searchText,
             'rewrite_link' => $rewriteLink,
 
             // Title & Desc
@@ -157,6 +177,14 @@ class Job extends Eloquent {
 
         );
         return $row;
+    }
+
+    protected function log($string){
+        $this->log[] = $string;
+    }
+
+    protected function getLog(){
+        return $this->log;
     }
 
     private function formatDate($date)

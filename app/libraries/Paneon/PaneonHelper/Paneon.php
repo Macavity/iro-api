@@ -4,6 +4,8 @@ namespace Paneon\PaneonHelper;
 
 class Paneon {
 
+    private $log = array();
+
     public static function debug($label, $data = "", $logLevel = 3){
         global $config, $debugLog;
 
@@ -38,6 +40,18 @@ class Paneon {
             echo $output;
         }
 
+    }
+
+    /**
+     * @param $dateString
+     * @return \DateTime
+     */
+    public static function fm12TimeToTimestamp($dateString){
+        // 07 16:12:18.12.2015
+        // MM HH:mm:ss/DD/YYYY
+        $dateTime = \DateTime::createFromFormat("m H:i:s.d.Y", $dateString);
+
+        return $dateTime;
     }
 
     public static function removeHTML($text){
