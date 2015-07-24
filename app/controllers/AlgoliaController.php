@@ -76,6 +76,7 @@ class AlgoliaController extends BaseController {
 
 
                 }
+
                 $this->searchIndex->saveObjects($projects);
                 $this->log("Imported ".count($projects)." projects into ".$this->searchIndexName);
             }
@@ -185,7 +186,7 @@ class AlgoliaController extends BaseController {
                     else{
                         $title = $google_title;
                     }
-                    $title = Paneon::removeHTML($title);
+                    $title = $this->removeHTML($title);
 
 
                     //Paneon::debug("Jobtitel:", $title);
@@ -457,7 +458,7 @@ class AlgoliaController extends BaseController {
             else{
                 $title = $google_title;
             }
-            $title = Paneon::removeHTML($title);
+            $title = $this->removeHTML($title);
 
 
             //Paneon::debug("Jobtitel:", $title);
