@@ -161,30 +161,43 @@ class PageController extends BaseController {
 
     public function systemCheck($serial){
 
+        /**
+         * Init Client
+         */
         try {
             $this->initClient($serial);
         }
         catch(Exception $e){
             return Response::json(array(
-                'errorMessage' => 'initClient failed'
+                'initClient' => 'Failure'
+            ));
+        }
+
+        /**
+         *
+         */
+        try{
+            $this->initializeFileMaker();
+        }
+        catch(Exception $e){
+            return Response::json(array(
+                'initFileMaker' => 'Failure'
+            ));
+        }
+
+        try {
+            $records = $this->findAny();
+            $this->fmErrorHandling($records);
+        }
+        catch(Exception $e){
+            return Response::json(array(
+                'findAny' => 'Failure'
             ));
         }
 
         $response = Response::json(array(
-            'success' => true,
+            'systemCheck' => 'Success'
         ));
-
-
-        try {
-            $records = $this->findAny();
-        }
-        catch(Exception $e){
-            $response = Response::json(array(
-                'errorMessage' => 'findAny failed'
-            ));
-        }
-
-        if(count($records))
 
         return $response;
     }
