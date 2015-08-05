@@ -542,10 +542,6 @@ class DataController extends BaseController {
             /** @var $jobId int */
             $jobId = $record->getField('ID');
 
-            $markdownCheckbox = $record->getField("MarkdownCheckbox");
-
-            $formatter = (empty($markdownCheckbox) || $markdownCheckbox != "Ja") ? "simple" : "markdown";
-
             if($jobId != intval($record->getField('ID')) || empty($jobId) || $jobId <= 0){
                 //Paneon::debug("Überspringe wegen ungültiger JobId: JobId ".$record->getField('ID').", ProjektName: ".$record->getField('ProjektName'));
                 throw(new Exception("Kein Datensatz gefunden."));
@@ -556,6 +552,21 @@ class DataController extends BaseController {
             if(!empty($startDate))
             {
                 $startDate = $this->formatDate($startDate);
+            }
+
+            /*
+             * Web Formatierung
+             */
+            $webFormat = $record->getField('Web_Format');
+
+            switch($webFormat){
+                case PANEON_JOB_FORMAT_MARKDOWN_VALUE:
+                    $webFormat = PANEON_JOB_FORMAT_MARKDOWN;
+                    break;
+                case PANEON_JOB_FORMAT_STANDARD_VALUE:
+                default:
+                    $webFormat = PANEON_JOB_FORMAT_STANDARD;
+                    break;
             }
 
             $intro = $record->getField('Web_Firmenintro');
@@ -629,7 +640,7 @@ class DataController extends BaseController {
                 'fm_id'     => $jobId,
                 'visible'   => $visible,
                 'timestamp' => $this->currentTimestamp,
-                'formatter' => $formatter,
+                'formatter' => $webFormat,
                 'start_date' => $startDate,
                 'position'  => $position_name,
                 'industry'  => $branche,
