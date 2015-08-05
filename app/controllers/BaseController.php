@@ -244,6 +244,27 @@ class BaseController extends Controller {
 
     }
 
+    protected function findModifiedPublicJobs($lastModified)
+    {
+        $this->log("findModifiedPublicJobs ".$lastModified);
+        $findCommand =& $this->fm->newFindCommand($this->fmLayout);
+        $findCommand->addFindCriterion('Web_Projekt','="Ja"');
+        $findCommand->addFindCriterion('AenderungZeitstempel', '>'.$lastModified);
+
+        try {
+            $result = $findCommand->execute();
+            $this->fmErrorHandling($result);
+
+            $records = $result->getRecords();
+
+            return $records;
+        }
+        catch(Exception $e){
+            die($e->getMessage());
+        }
+
+    }
+
     /**
      * @throws Exception
      * @return FileMaker_Record[]

@@ -26,7 +26,14 @@ $app = new Illuminate\Foundation\Application;
 
 $env = $app->detectEnvironment(array(
 
-	'local' => array('MacBook-6.local', 'macbook.fritz.box', 'MacbookPape.local', 'localhost', 'pc-w7-124.portalmuc.local'),
+	'local' => array(
+        'MacBook-6.local',
+        'macbook.fritz.box',
+        'MacbookPape.local',
+        'localhost',
+        'Alexanders-MBP.fritz.box',
+        'pc-w7-124.portalmuc.local'
+    ),
 
 ));
 
