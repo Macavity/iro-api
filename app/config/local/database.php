@@ -50,7 +50,7 @@ return array(
 			'driver'    => 'mysql',
 			'host'      => 'localhost',
             'unix_socket'   => '/Applications/MAMP/tmp/mysql/mysql.sock',
-            'database'  => 'apidev',
+            'database'  => 'paneon_api',
 			'username'  => 'root',
 			'password'  => 'root',
 			'charset'   => 'utf8',

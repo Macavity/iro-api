@@ -18,6 +18,17 @@ define('PANEON_JOB_TYPE_HIDDEN', 0);
 define('PANEON_JOB_TYPE_NORMAL', 1);
 define('PANEON_JOB_TYPE_ARCHIVE', 2);
 
+/*
+ *---------------------------------------------------------------
+ * Job Format Types
+ *---------------------------------------------------------------
+ */
+define('PANEON_JOB_FORMAT_STANDARD', 1);
+define('PANEON_JOB_FORMAT_MARKDOWN', 2);
+
+define('PANEON_JOB_FORMAT_STANDARD_VALUE', 'Standard');
+define('PANEON_JOB_FORMAT_MARKDOWN_VALUE', 'Markdown');
+
 class BaseController extends Controller {
 
     /**
