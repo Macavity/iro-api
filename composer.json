@@ -10,7 +10,8 @@
         "components/jquery": "1.11.*@dev",
         "barryvdh/laravel-ide-helper": "1.*",
         "irazasyed/laravel-gamp": "0.5",
-        "way/generators": "3"
+        "algolia/algoliasearch-client-php": "1.5.*",
+        "way/generators": "*"
 	},
 	"autoload": {
 		"classmap": [

@@ -7,6 +7,8 @@ $baseDir = dirname($vendorDir);
 
 return array(
     'AddCacheTimeToClientsTable' => $baseDir . '/app/database/migrations/2014_06_20_172458_add_cache_time_to_clients_table.php',
+    'AddCacheTypeToClientsTable' => $baseDir . '/app/database/migrations/2015_07_23_155537_add_cache_type_to_clients_table.php',
+    'AlgoliaController' => $baseDir . '/app/controllers/AlgoliaController.php',
     'BaseController' => $baseDir . '/app/controllers/BaseController.php',
     'Client' => $baseDir . '/app/models/Client.php',
     'ClientsController' => $baseDir . '/app/controllers/ClientsController.php',
