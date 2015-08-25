@@ -61,8 +61,6 @@ Route::group(array('prefix' => 'data'), function()
         ->where('serial', '[A-Za-z\-\d+]+')
         ->where('jobId', '[\d]+');
 
-    Route::get('{serial}/import/search/{type?}', 'AlgoliaController@import')
-        ->where('serial', '[A-Za-z\-\d+]+');
 });
 
 // ===============================================
@@ -70,9 +68,15 @@ Route::group(array('prefix' => 'data'), function()
 // ===============================================
 Route::group(array('prefix' => 'search'), function()
 {
+    // Import
     Route::get('{serial}/import/{type?}', 'AlgoliaController@import')
         ->where('serial', '[A-Za-z\-\d+]+');
+
+    // Refresh Cache
+    Route::get('{serial}/check-cache/jobs/{type?}', 'AlgoliaController@checkCache')
+        ->where('serial', '[A-Za-z\-\d+]+');
 });
+
 
 // First Page (Form)
 Route::any('/{serial}/{fmId}', array(
@@ -125,12 +129,12 @@ Route::get('/debug/fm', function(){
     echo "\n<br>getFoundSetCount:".$result->getFoundSetCount();
     echo "\n<br>getFetchCount:".$result->getFetchCount();
 
-    \Paneon\PaneonHelper\Paneon::debug($resultString);
+    //\Paneon\PaneonHelper\Paneon::debug($resultString);
 });
 
 Route::get('debug/test', function(){
 
-    $curlUrl = 'http://www.xing.de/places?mhp_id='.$mhpId;
+    $curlUrl = 'http://www.xing.de/';
 
     $curlHandle = curl_init($curlUrl);
     curl_setopt($curlHandle, CURLOPT_RETURNTRANSFER, true);
