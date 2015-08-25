@@ -22,10 +22,13 @@ class AlgoliaController extends BaseController {
         // Pape
         if($this->client->id == 2){
             $this->searchIndexName = 'pape';
+
         }
         else {
             return Response::view('error', array(), 404);
         }
+
+        $this->searchIndex = $this->searchClient->initIndex($this->searchIndexName);
     }
 
     public function import($serial, $type = "new")
@@ -38,8 +41,6 @@ class AlgoliaController extends BaseController {
             $this->initClient($serial);
 
             $this->initSearchClient();
-
-            $this->searchIndex = $this->searchClient->initIndex($this->searchIndexName);
 
             $this->initializeFileMaker();
 
