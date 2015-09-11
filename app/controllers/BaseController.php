@@ -173,8 +173,11 @@ class BaseController extends Controller {
         return $records;
     }
 
-    protected function log($string){
-        $this->log[] = $string;
+    protected function log($string, $visible = false){
+        $this->log[] = array(
+            'text' => $string,
+            'visible' => $visible,
+        );
     }
 
     protected function getLog(){
@@ -250,30 +253,98 @@ class BaseController extends Controller {
             return $records;
         }
         catch(Exception $e){
-            die($e->getMessage());
+            throw(new Exception($e->getMessage(), $e->getCode()));
         }
 
     }
 
-    protected function findModifiedPublicJobs($lastModified)
+    /**
+     * @param Integer $lastModified Timestamp of the last import run
+     * @return FileMaker_Record[]
+     * @throws Exception
+     */
+    protected function findModifiedJobs($lastModified)
     {
         $this->log("findModifiedPublicJobs ".$lastModified);
         $findCommand =& $this->fm->newFindCommand($this->fmLayout);
-        $findCommand->addFindCriterion('Web_Projekt','="Ja"');
+        // Have to find all jobs because there might be those that were previously public but aren't now
+        //$findCommand->addFindCriterion('Web_Projekt','="Ja"');
+
+        $lastModified = strftime("%m/%d/%Y 00:00:00", $lastModified);
+
         $findCommand->addFindCriterion('AenderungZeitstempel', '>'.$lastModified);
+        $findCommand->addSortRule('AenderungZeitstempel', 1, FILEMAKER_SORT_ASCEND);
 
         try {
             $result = $findCommand->execute();
-            $this->fmErrorHandling($result);
+            if(!$this->fmErrorHandling($result)){
+                throw(new Exception("Kein Datensatz gefunden.", 101));
+            }
 
             $records = $result->getRecords();
+
+            foreach($records as $record){
+                $dateTime = Paneon\PaneonHelper\Paneon::fm12TimeToTimestamp($record->getField('AenderungZeitstempel'));
+                //echo "\n<br>".'Job: '.$record->getField('ID').' - '.$dateTime->format("d.m.Y H:m:s");
+
+            }
+
+            //die();
 
             return $records;
         }
         catch(Exception $e){
-            die($e->getMessage());
+            throw(new Exception($e->getMessage(), $e->getCode()));
         }
 
+    }
+
+    /**
+     * @param $jobId
+     * @param string $type
+     * @return FileMaker_Record
+     * @throws Exception
+     */
+    protected function findFileMakerJobById($jobId, $type = "open"){
+        $this->log("findFileMakerJobById: ".$jobId);
+
+        $findCommand =& $this->fm->newFindCommand($this->fmLayout);
+        if($type == "open"){
+            $findCommand->addFindCriterion('Web_Projekt','="Ja"');
+        }
+        $findCommand->addFindCriterion('ID','="'.$jobId.'"');
+
+        $result = $findCommand->execute();
+        $this->fmErrorHandling($result);
+
+        $record = $result->getFirstRecord();
+        $this->fmErrorHandling($record);
+
+        $this->fmRecordId = $record->getRecordId();
+        try{
+            $this->fmId = $record->getField('ID');
+
+            $xingLink = trim($record->getField('XING'));
+
+            $this->fmXingLink = (empty($xingLink)) ? "" : $xingLink;
+        }
+        catch(Exception $e){
+            throw(new Exception($e->getMessage(), $e->getCode()));
+        }
+
+        return $record;
+    }
+
+    /**
+     * @param $id
+     *
+     * @deprecated
+     * @return FileMaker_Record
+     * @throws Exception
+     */
+    protected function findFileMakerRecord($id)
+    {
+        $this->findFileMakerJobById($id, "all");
     }
 
     /**
@@ -314,7 +385,7 @@ class BaseController extends Controller {
     }
 
     /**
-     * @param  FileMaker_Error|FileMaker_Result|FileMaker_Record[] $error
+     * @param  FileMaker_Error|FileMaker_Result|FileMaker_Record[]|FileMaker_Record $error
      *
      * @throws Exception
      * @return bool
@@ -333,6 +404,9 @@ class BaseController extends Controller {
             //Paneon::debug("Backtrace", $backtrace);
 
             switch($code){
+                case 101:
+                    $message = "Datensatz wurde nicht gefunden";
+                    break;
                 case 102:
                     $message = "Feld fehlt in Layout, bitte kontaktieren Sie den Heads2Hunt Support wegen dieses Fehlers.";
                     break;
@@ -385,38 +459,6 @@ class BaseController extends Controller {
         }
 
         return $oAuthClient;
-    }
-
-    /**
-     * @param $id
-     *
-     * @return FileMaker_Record
-     * @throws Exception
-     */
-    protected function findFileMakerRecord($id)
-    {
-        $this->fmAction = "findFileMakerRecord($id)";
-        $findCommand = $this->fm->newFindCommand($this->fmLayout);
-        $findCommand->addFindCriterion('ID', '='.$id);
-        $result = $findCommand->execute();
-
-        $this->fmErrorHandling($result);
-
-        $records = $result->getRecords();
-
-        $this->fmErrorHandling($records);
-
-        if(count($records) > 0){
-            $record = $records[0];
-            $this->fmRecordId = $record->getRecordId();
-            $this->fmId = $record->getField('ID');
-
-            $xingLink = trim($record->getField('XING'));
-
-            $this->fmXingLink = (empty($xingLink)) ? "" : $xingLink;
-
-            return $record;
-        }
     }
 
     protected function trackJoblistAction($action){

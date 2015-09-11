@@ -36,6 +36,10 @@ class Job extends Eloquent {
 
     private $log = array();
 
+    private $jobId = 0;
+
+    private $data = array();
+
     /**
      * @param FileMaker_Record $record
      * @throws Exception
@@ -43,17 +47,27 @@ class Job extends Eloquent {
     public function __construct($record){
 
         /** @var $jobId int */
-        $jobId = $record->getField('ID');
+        $this->jobId = $record->getField('ID');
 
-        if($jobId != intval($jobId) || empty($jobId) || $jobId <= 0){
+        if($this->jobId != intval($this->jobId) || empty($this->jobId) || $this->jobId <= 0){
             throw(new Exception("Malformed Data"));
         }
 
         $this->record = $record;
 
+        $this->collectData();
+
+    }
+
+    public function getId(){
+        return $this->record->getField('ID');
     }
 
     public function getData(){
+        return $this->data;
+    }
+
+    public function collectData(){
 
         $record = $this->record;
 
@@ -176,7 +190,27 @@ class Job extends Eloquent {
             "JTBAttraktivitaet" => $attraktivitaet,
 
         );
-        return $row;
+        $this->data = $row;
+    }
+
+    /**
+     * @param JobMirror $jobMirror
+     * @return bool
+     */
+    public function identicalToMirror($jobMirror){
+        $jobData = $this->getData();
+        $mirrorJobData = json_decode($jobMirror->data, true);
+
+        foreach($jobData as $key => $value){
+
+            if($value != $mirrorJobData[$key]){
+                return false;
+            }
+
+        }
+
+        return true;
+
     }
 
     protected function log($string){

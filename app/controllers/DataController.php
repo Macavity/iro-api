@@ -525,19 +525,7 @@ class DataController extends BaseController {
 
             $this->trackEvent('job-detail', $jobId);
 
-            $findCommand =& $this->fm->newFindCommand('Projektliste_Web');
-           //$findCommand->addFindCriterion('Web_Projekt','="Ja"');
-            $findCommand->addFindCriterion('ID','="'.$jobId.'"');
-
-            $result = $findCommand->execute();
-
-            if(!$this->fmErrorHandling($result)){
-                throw(new Exception("Kein Datensatz gefunden."));
-            }
-
-            $record = $result->getFirstRecord();
-
-            /** @var $record FileMaker_Record */
+            $record = $this->findFileMakerJobById($jobId);
 
             /** @var $jobId int */
             $jobId = $record->getField('ID');
