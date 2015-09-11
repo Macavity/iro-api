@@ -11,7 +11,6 @@
 |
 */
 
-
 // ===============================================
 // LOGIN SECTION =================================
 // ===============================================
@@ -75,6 +74,11 @@ Route::group(array('prefix' => 'search'), function()
     // Refresh Cache
     Route::get('{serial}/check-cache/jobs/{type?}', 'AlgoliaController@checkCache')
         ->where('serial', '[A-Za-z\-\d+]+');
+
+    // Single Refresh
+    Route::get('{serial}/check-cache/single/{jobId}', 'AlgoliaController@singleRefresh')
+        ->where('serial', '[A-Za-z\-\d+]+')
+        ->where('jobId', '[\d]+');
 });
 
 
