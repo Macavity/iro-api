@@ -80,6 +80,21 @@ class Job extends Eloquent {
             $startDate = $this->formatDate($startDate);
         }
 
+        /**
+         * Web Formatierung
+         */
+        $webFormat = $record->getField('Web_Format');
+
+        switch($webFormat){
+            case PANEON_JOB_FORMAT_MARKDOWN_VALUE:
+                $webFormat = PANEON_JOB_FORMAT_MARKDOWN;
+                break;
+            case PANEON_JOB_FORMAT_STANDARD_VALUE:
+            default:
+                $webFormat = PANEON_JOB_FORMAT_STANDARD;
+                break;
+        }
+
         $intro = $record->getField('Web_Firmenintro');
         $detailslink = $record->getField('Web_Detailslink');
         $position_name = $record->getField('ProjektName');
@@ -143,6 +158,7 @@ class Job extends Eloquent {
         }
         //Paneon::debug("Sichtbarkeit:", $visible);
 
+
         /**
          * Last Modified
          */
@@ -155,41 +171,47 @@ class Job extends Eloquent {
         }
         catch(Exception $e){
             $this->log($e->getMessage());
-            $fmZeitstempel = "";
+            //$fmZeitstempel = "";
             $lastModified = 0;
             $lastModifiedReadable = "";
         }
 
         $row = array(
-            'objectID'     => $jobId,
             'fm_id'     => $jobId,
             'visible'   => $visible,
+
+            'timestamp' => $lastModified,
+
+            // Added for algolia
+            'objectID'     => $jobId,
             'last_modified_date' => $lastModifiedReadable,
             'last_modified' => $lastModified,
-            //'last_modified_fm' => $fmZeitstempel,
+
+
+            'formatter' => $webFormat,
             'start_date' => $startDate,
             'position'  => $position_name,
             'industry'  => $branche,
             'location'  => $city,
             'contact'   => $web_berater,
-            'mail'      => $web_berater_email,
+            'contact_mail'      => $web_berater_email,
             'lang'      => ($language == 'Englisch' || strstr($language,"en") ) ? 'en' : 'de',
-            //"full_text" => $searchText,
+            "full_text" => $searchText,
             'rewrite_link' => $rewriteLink,
 
             // Title & Desc
-            'google_title' => $title,
-            'google_desc' => $google_desc,
+            'seo_title' => $title,
+            'seo_desc' => $google_desc,
 
             // Detail Daten
-            "Web_Firmenintro" => $intro,
+            "job_intro" => $intro,
             "Web_Detailslink" => $detailslink,
-            "JTBStellenbeschreibung" => $position,
-            "JTBKandidatenbeschreibung" => $candidate,
-            "JTBSchlusstext" => $resume,
-            "JTBAttraktivitaet" => $attraktivitaet,
-
+            "job_description" => $position,
+            "job_candidate" => $candidate,
+            "job_resume" => $resume,
+            "job_desirability" => $attraktivitaet,
         );
+
         $this->data = $row;
     }
 

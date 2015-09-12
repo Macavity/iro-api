@@ -176,34 +176,4 @@ class AlgoliaController extends DataController {
         ));
 
     }
-
-    public function singleRefresh($serial, $jobId){
-        /*
-         * Get FM Record
-         * Check if anything changed
-         * if something did change: refresh algolia and api-cache
-         */
-
-        try{
-            $this->initClient($serial);
-
-            $this->initializeFileMaker();
-
-            $this->trackPageHit('/search/check-cache/single/'.$jobId);
-
-            $record = $this->findFileMakerJobById($jobId);
-
-            /** @var $jobId int */
-            $jobId = $record->getField('ID');
-
-
-        }
-        catch(Exception $e){
-            return View::make('filemaker_error', array(
-                'error' => $e->getMessage(),
-                'code' => $e->getCode(),
-            ));
-        }
-
-    }
 }
