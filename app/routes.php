@@ -11,7 +11,6 @@
 |
 */
 
-
 // ===============================================
 // LOGIN SECTION =================================
 // ===============================================
@@ -48,18 +47,46 @@ Route::group(array('prefix' => 'admin', 'before' => 'auth'), function()
 // ===============================================
 Route::group(array('prefix' => 'data'), function()
 {
-    Route::get('{serial}/jobs/all/{type?}', 'DataController@jobListAll')
-        ->where('serial', '[A-Za-z\-\d+]+');
-
     Route::get('{serial}/jobs/external/{format?}', 'DataController@externalJobList')
         ->where('serial', '[A-Za-z\-\d+]+');
 
+    Route::get('{serial}/jobs/{sortDirection}/{type?}', 'DataController@jobListAll')
+        ->where('serial', '[A-Za-z\-\d+]+');
+
+
     Route::get('/{serial}/job-detail/{jobId}', array(
-        'uses' => 'DataController@jobDetail'
+        'uses' => 'DataController@jobDetailFallback'
     ))
         ->where('serial', '[A-Za-z\-\d+]+')
         ->where('jobId', '[\d]+');
+
+    Route::get('/{serial}/job-detail-check/{jobId}', array(
+        'uses' => 'DataController@jobDetailCheck'
+    ))
+        ->where('serial', '[A-Za-z\-\d+]+')
+        ->where('jobId', '[\d]+');
+
 });
+
+// ===============================================
+// Search Engine (Premium)========================
+// ===============================================
+Route::group(array('prefix' => 'search'), function()
+{
+    // Import
+    Route::get('{serial}/import/{type?}', 'AlgoliaController@import')
+        ->where('serial', '[A-Za-z\-\d+]+');
+
+    // Refresh Cache
+    Route::get('{serial}/check-cache/jobs/{type?}', 'AlgoliaController@checkCache')
+        ->where('serial', '[A-Za-z\-\d+]+');
+
+    // Single Refresh
+    Route::get('{serial}/check-cache/single/{jobId}', 'AlgoliaController@singleRefresh')
+        ->where('serial', '[A-Za-z\-\d+]+')
+        ->where('jobId', '[\d]+');
+});
+
 
 // First Page (Form)
 Route::any('/{serial}/{fmId}', array(
@@ -103,12 +130,21 @@ Route::get('/debug/fm', function(){
     $findCommand = $fm->newFindAnyCommand('Projektliste_Web');
 
     $result = $findCommand->execute();
-    print_r($result);
+
+    $resultString = print_r($result, true);
+
+    $resultString = str_replace("xs4web_pape","****", $resultString);
+    $resultString = str_replace("web_pape","****", $resultString);
+
+    echo "\n<br>getFoundSetCount:".$result->getFoundSetCount();
+    echo "\n<br>getFetchCount:".$result->getFetchCount();
+
+    //\Paneon\PaneonHelper\Paneon::debug($resultString);
 });
 
 Route::get('debug/test', function(){
 
-    $curlUrl = 'http://www.xing.de/places?mhp_id='.$mhpId;
+    $curlUrl = 'http://www.xing.de/';
 
     $curlHandle = curl_init($curlUrl);
     curl_setopt($curlHandle, CURLOPT_RETURNTRANSFER, true);
@@ -118,7 +154,6 @@ Route::get('debug/test', function(){
     curl_close($curlHandle);
 
 });
-
 
 App::missing(function($exception) {
     // shows an error page (app/views/error.blade.php)
