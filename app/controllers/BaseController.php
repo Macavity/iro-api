@@ -4,9 +4,10 @@
 /**
  * Non-namespaced version of FileMaker 12 PHP API
  */
-include_once(base_path().'/app/libraries/filemaker-12/FileMaker.php');
+//include_once(base_path().'/app/libraries/filemaker-12/FileMaker.php');
 
-require_once(base_path().'/app/libraries/Paneon/PaneonHelper/Paneon.php');
+//use Paneon\FileMaker12;
+use TheIconic\Tracking\GoogleAnalytics\Analytics;
 
 /*
  *---------------------------------------------------------------
@@ -17,6 +18,16 @@ define('PANEON_JOB_TYPE_HIDDEN', 0);
 define('PANEON_JOB_TYPE_NORMAL', 1);
 define('PANEON_JOB_TYPE_ARCHIVE', 2);
 
+/*
+ *---------------------------------------------------------------
+ * Job Format Types
+ *---------------------------------------------------------------
+ */
+define('PANEON_JOB_FORMAT_STANDARD', 1);
+define('PANEON_JOB_FORMAT_MARKDOWN', 2);
+
+define('PANEON_JOB_FORMAT_STANDARD_VALUE', 'Standard');
+define('PANEON_JOB_FORMAT_MARKDOWN_VALUE', 'Markdown');
 
 class BaseController extends Controller {
 
@@ -43,7 +54,13 @@ class BaseController extends Controller {
 
     protected $fmRecordId = 0;
 
+    /**
+     * Google Analytics Measurement Protocol
+     * @var TheIconic\Tracking\GoogleAnalytics\Analytics
+     */
+    protected $gamp = false;
 
+    protected $gampTrackingId = "UA-24950655-2";
 
     /**
      * @var Client
@@ -56,6 +73,13 @@ class BaseController extends Controller {
     protected $serialNumber = "";
 
     protected $fmXingLink;
+
+    protected $currentTimestamp;
+    protected $log = array();
+
+    public function __construct(){
+        $this->currentTimestamp = time();
+    }
 
     /**
      * Show an error alert page
@@ -90,8 +114,13 @@ class BaseController extends Controller {
 
         if(!$this->client)
         {
+            $any = Client::all();
+
+            print_r($any);
+
             throw(new Exception("Seriennummer ungültig."));
         }
+
 
     }
 
@@ -144,16 +173,30 @@ class BaseController extends Controller {
         return $records;
     }
 
+    protected function log($string, $visible = false){
+        $this->log[] = array(
+            'text' => $string,
+            'visible' => $visible,
+        );
+    }
+
+    protected function getLog(){
+        return $this->log;
+    }
+
     /**
-     * @throws Exception
+     * @param string $sortDirection
      * @return FileMaker_Record[]
+     * @throws Exception
      */
-    protected function findArchivedFileMakerJobs()
+    protected function findArchivedFileMakerJobs($sortDirection = "asc")
     {
+        $sortDirection = ($sortDirection == "asc") ? FILEMAKER_SORT_ASCEND : FILEMAKER_SORT_DESCEND;
+
         $this->fmAction = "findArchivedFileMakerJobs";
         $findCommand =& $this->fm->newFindCommand($this->fmLayout);
         $findCommand->addFindCriterion('Web_Projekt','="Archiv"');
-
+        $findCommand->addSortRule('Start', 1, $sortDirection);
 
         $result = $findCommand->execute();
 
@@ -184,22 +227,124 @@ class BaseController extends Controller {
     }
 
     /**
+     * @param string $sortDirection
      * @throws Exception
      * @return FileMaker_Record[]
      */
-    protected function findPublicFileMakerJobs()
+    protected function findPublicFileMakerJobs($sortDirection = "asc")
     {
+        error_reporting(E_ALL);
+        ini_set('display_errors', 'On');
+
+
+        $sortDirection = ($sortDirection == "asc") ? FILEMAKER_SORT_ASCEND : FILEMAKER_SORT_DESCEND;
         $this->fmAction = "findPublicFileMakerJobs";
         $findCommand =& $this->fm->newFindCommand($this->fmLayout);
         $findCommand->addFindCriterion('Web_Projekt','="Ja"');
+        $findCommand->addSortRule('Start', 1, $sortDirection);
+
+
+        try {
+            $result = $findCommand->execute();
+            $this->fmErrorHandling($result);
+
+            $records = $result->getRecords();
+
+            return $records;
+        }
+        catch(Exception $e){
+            throw(new Exception($e->getMessage(), $e->getCode()));
+        }
+
+    }
+
+    /**
+     * @param Integer $lastModified Timestamp of the last import run
+     * @return FileMaker_Record[]
+     * @throws Exception
+     */
+    protected function findModifiedJobs($lastModified)
+    {
+        $this->log("findModifiedPublicJobs ".$lastModified);
+        $findCommand =& $this->fm->newFindCommand($this->fmLayout);
+        // Have to find all jobs because there might be those that were previously public but aren't now
+        //$findCommand->addFindCriterion('Web_Projekt','="Ja"');
+
+        $lastModified = strftime("%m/%d/%Y 00:00:00", $lastModified);
+
+        $findCommand->addFindCriterion('AenderungZeitstempel', '>'.$lastModified);
+        $findCommand->addSortRule('AenderungZeitstempel', 1, FILEMAKER_SORT_ASCEND);
+
+        try {
+            $result = $findCommand->execute();
+            if(!$this->fmErrorHandling($result)){
+                throw(new Exception("Kein Datensatz gefunden.", 101));
+            }
+
+            $records = $result->getRecords();
+
+            foreach($records as $record){
+                $dateTime = Paneon\PaneonHelper\Paneon::fm12TimeToTimestamp($record->getField('AenderungZeitstempel'));
+                //echo "\n<br>".'Job: '.$record->getField('ID').' - '.$dateTime->format("d.m.Y H:m:s");
+
+            }
+
+            //die();
+
+            return $records;
+        }
+        catch(Exception $e){
+            throw(new Exception($e->getMessage(), $e->getCode()));
+        }
+
+    }
+
+    /**
+     * @param $jobId
+     * @param string $type
+     * @return FileMaker_Record
+     * @throws Exception
+     */
+    protected function findFileMakerJobById($jobId, $type = "open"){
+        $this->log("findFileMakerJobById: ".$jobId);
+
+        $findCommand =& $this->fm->newFindCommand($this->fmLayout);
+        if($type == "open"){
+            $findCommand->addFindCriterion('Web_Projekt','="Ja"');
+        }
+        $findCommand->addFindCriterion('ID','="'.$jobId.'"');
 
         $result = $findCommand->execute();
-
         $this->fmErrorHandling($result);
 
-        $records = $result->getRecords();
+        $record = $result->getFirstRecord();
+        $this->fmErrorHandling($record);
 
-        return $records;
+        $this->fmRecordId = $record->getRecordId();
+        try{
+            $this->fmId = $record->getField('ID');
+
+            $xingLink = trim($record->getField('XING'));
+
+            $this->fmXingLink = (empty($xingLink)) ? "" : $xingLink;
+        }
+        catch(Exception $e){
+            throw(new Exception($e->getMessage(), $e->getCode()));
+        }
+
+        return $record;
+    }
+
+    /**
+     * @param $id
+     *
+     * @deprecated
+     * @return FileMaker_Record
+     * @throws Exception
+     */
+    protected function findFileMakerRecord($id)
+    {
+        $this->findFileMakerJobById($id, "all");
     }
 
     /**
@@ -240,7 +385,7 @@ class BaseController extends Controller {
     }
 
     /**
-     * @param  FileMaker_Error|FileMaker_Result|FileMaker_Record[] $error
+     * @param  FileMaker_Error|FileMaker_Result|FileMaker_Record[]|FileMaker_Record $error
      *
      * @throws Exception
      * @return bool
@@ -259,6 +404,9 @@ class BaseController extends Controller {
             //Paneon::debug("Backtrace", $backtrace);
 
             switch($code){
+                case 101:
+                    $message = "Datensatz wurde nicht gefunden";
+                    break;
                 case 102:
                     $message = "Feld fehlt in Layout, bitte kontaktieren Sie den Heads2Hunt Support wegen dieses Fehlers.";
                     break;
@@ -313,35 +461,91 @@ class BaseController extends Controller {
         return $oAuthClient;
     }
 
-    /**
-     * @param $id
-     *
-     * @return FileMaker_Record
-     * @throws Exception
-     */
-    protected function findFileMakerRecord($id)
-    {
-        $this->fmAction = "findFileMakerRecord($id)";
-        $findCommand = $this->fm->newFindCommand($this->fmLayout);
-        $findCommand->addFindCriterion('ID', '='.$id);
-        $result = $findCommand->execute();
+    protected function trackJoblistAction($action){
+        $gamp = new Analytics();
 
-        $this->fmErrorHandling($result);
+        $response = $gamp->setProtocolVersion(1)
+            ->setAsyncRequest(true)
+            ->setTrackingId( $this->gampTrackingId )
+            ->setClientId( $this->getTrackedClientId() )
+            ->setUserId( $this->client->db_name )
+            ->setIpOverride( $_SERVER["REMOTE_ADDR"] )
+            ->setDocumentHostName($_SERVER['HTTP_HOST'])
+            // Page Hit
+            ->setDocumentPath( '/'.$this->client->id.'/' )
+            // Event
+            ->setEventCategory("joblist")
+            ->setEventAction( $action )
+            ->sendEvent();
+    }
 
-        $records = $result->getRecords();
+    protected function trackPageHit($url){
 
-        $this->fmErrorHandling($records);
+        $gamp = new Analytics();
 
-        if(count($records) > 0){
-            $record = $records[0];
-            $this->fmRecordId = $record->getRecordId();
-            $this->fmId = $record->getField('ID');
+        $gamp->setProtocolVersion(1)
+            ->setAsyncRequest(true)
+            ->setTrackingId( $this->gampTrackingId )
+            ->setClientId( $this->getTrackedClientId() )
+            ->setUserId( $this->client->db_name )
+            ->setIpOverride( $_SERVER["REMOTE_ADDR"] )
+            ->setDocumentHostName($_SERVER['HTTP_HOST'])
+            // Page Hit
+            ->setDocumentPath( '/'.$this->client->id.$url );
+        $response = $gamp->sendPageview();
 
-            $xingLink = trim($record->getField('XING'));
 
-            $this->fmXingLink = (empty($xingLink)) ? "" : $xingLink;
 
-            return $record;
+        //Paneon\PaneonHelper\Paneon::debug("gamp",$response);
+
+    }
+
+    protected function trackEvent($category, $action){
+
+        $gamp = new Analytics();
+
+        $response = $gamp->setProtocolVersion(1)
+            ->setAsyncRequest(true)
+            ->setTrackingId( $this->gampTrackingId )
+            ->setClientId( $this->getTrackedClientId() )
+            ->setUserId( $this->client->db_name )
+            ->setIpOverride( $_SERVER["REMOTE_ADDR"] )
+            ->setDocumentHostName($_SERVER['HTTP_HOST'])
+            // Page Hit
+            ->setDocumentPath( '/'.$this->client->id.'/' )
+            // Event
+            ->setEventCategory( $category )
+            ->setEventAction( $action )
+            ->sendEvent();
+        //Paneon\PaneonHelper\Paneon::debug("gamp",$response);
+    }
+
+    // Handle the parsing of the _ga cookie or setting it to a unique identifier
+    protected function getTrackedClientId() {
+        /*if (isset($_COOKIE['_ga'])) {
+            list($version,$domainDepth, $cid1, $cid2) = preg_split('[\.]', $_COOKIE["_ga"],4);
+            $contents = array('version' => $version, 'domainDepth' => $domainDepth, 'cid' => $cid1.'.'.$cid2);
+            $cid = $contents['cid'];
         }
+        else {*/
+            $cid = $this->client->serial;
+        //}
+        return $cid;
+    }
+
+    public function removeHTML($text){
+
+        // FM 12 liefert decodierte Entities
+        $text = html_entity_decode($text);
+
+
+        // Alle Tags entfernen
+        $text = strip_tags($text);
+
+        $text = str_replace("&lt;br&gt;", "", $text);
+        $text = str_replace("&amp;lt;br&amp;gt;", "", $text);
+
+
+        return $text;
     }
 }

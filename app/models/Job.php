@@ -27,13 +27,247 @@ class Job extends Eloquent {
      *
      * @var array
      */
-    protected $hidden = array('serial', 'fm_user', 'fm_password');
+    protected $hidden = array();
 
-    public function getFieldLabels()
-    {
-        return Client::$fieldLabels;
+    /**
+     * @var FileMaker_Record
+     */
+    private $record;
+
+    private $log = array();
+
+    private $jobId = 0;
+
+    private $data = array();
+
+    /**
+     * @param FileMaker_Record $record
+     * @throws Exception
+     */
+    public function __construct($record){
+
+        /** @var $jobId int */
+        $this->jobId = $record->getField('ID');
+
+        if($this->jobId != intval($this->jobId) || empty($this->jobId) || $this->jobId <= 0){
+            throw(new Exception("Malformed Data"));
+        }
+
+        $this->record = $record;
+
+        $this->collectData();
+
     }
 
+    public function getId(){
+        return $this->record->getField('ID');
+    }
 
+    public function getData(){
+        return $this->data;
+    }
+
+    public function collectData(){
+
+        $record = $this->record;
+
+        $jobId = $record->getField('ID');
+
+        $startDate = $record->getField("Start");
+
+        if(!empty($startDate))
+        {
+            $startDate = $this->formatDate($startDate);
+        }
+
+        /**
+         * Web Formatierung
+         */
+        $webFormat = $record->getField('Web_Format');
+
+        switch($webFormat){
+            case PANEON_JOB_FORMAT_MARKDOWN_VALUE:
+                $webFormat = PANEON_JOB_FORMAT_MARKDOWN;
+                break;
+            case PANEON_JOB_FORMAT_STANDARD_VALUE:
+            default:
+                $webFormat = PANEON_JOB_FORMAT_STANDARD;
+                break;
+        }
+
+        $intro = $record->getField('Web_Firmenintro');
+        $detailslink = $record->getField('Web_Detailslink');
+        $position_name = $record->getField('ProjektName');
+        $position = $record->getField('JTBStellenbeschreibung');
+
+        $city = $record->getField('Web_Ort');
+        $candidate = $record->getField('JTBKandidatenbeschreibung');
+        $resume = $record->getField('JTBSchlusstext');
+        $attraktivitaet = $record->getField('JTBAttraktivitaet');
+
+        $web_berater = $record->getField('Web_Berater');
+        $web_berater_email = $record->getField('Web_Berater_Email');
+        $branche = $record->getField('JBranche');
+        $language = $record->getField('JSprache');
+
+        $searchText = $record->getField("Web_Volltext");
+
+        $rewriteLink = $position_name.'-'.$city;
+        //$rewriteLink = iconv("UTF-8", "ASCII//TRANSLIT", $rewriteLink);
+        $rewriteLink = str_replace(
+            array('ä', 'ö', 'ü', 'ß','Ä','Ö','Ü'),
+            array('ae', 'oe', 'ue', 'ss','Ae', 'Oe', 'Ue'), $rewriteLink);
+        $rewriteLink = preg_replace('/[^A-z0-9]+/', "_", $rewriteLink);
+
+        $rewriteLink = preg_replace("/_+/", "_", $rewriteLink);
+
+        //remove all underscores at the beginning and end
+        $rewriteLink = trim($rewriteLink, "_");
+
+        $rewriteLink = $jobId.'-'.$rewriteLink;
+
+        $google_title = $record->getField('Google Titel');
+        $google_desc = $record->getField('Google Beschreibung');
+
+
+        if(empty($google_title)){
+            $title = $city.' Jobs - '.$position_name;
+        }
+        else{
+            $title = $google_title;
+        }
+        $title = Paneon\PaneonHelper\Paneon::removeHTML($title);
+
+
+        //$this->log("Jobtitel:".$title);
+
+        /*
+         * Sichtbarkeit des Datensatzes
+         */
+        $webProject = $record->getField('Web_Projekt');
+
+        switch($webProject){
+            case 'Ja':
+                $visible = PANEON_JOB_TYPE_NORMAL;
+                break;
+            case 'Archiv':
+                $visible = PANEON_JOB_TYPE_ARCHIVE;
+                break;
+            default:
+                $visible = PANEON_JOB_TYPE_HIDDEN;
+        }
+        //Paneon::debug("Sichtbarkeit:", $visible);
+
+
+        /**
+         * Last Modified
+         */
+        try {
+            $fmZeitstempel = $record->getField('AenderungZeitstempel');
+            $dateTime = Paneon\PaneonHelper\Paneon::fm12TimeToTimestamp($fmZeitstempel);
+
+            $lastModified = $dateTime->getTimestamp();
+            $lastModifiedReadable = $dateTime->format("d.m.Y H:i:s");
+        }
+        catch(Exception $e){
+            $this->log($e->getMessage());
+            //$fmZeitstempel = "";
+            $lastModified = 0;
+            $lastModifiedReadable = "";
+        }
+
+        $row = array(
+            'fm_id'     => $jobId,
+            'visible'   => $visible,
+
+            'timestamp' => $lastModified,
+
+            // Added for algolia
+            'objectID'     => $jobId,
+            'last_modified_date' => $lastModifiedReadable,
+            'last_modified' => $lastModified,
+
+
+            'formatter' => $webFormat,
+            'start_date' => $startDate,
+            'position'  => $position_name,
+            'industry'  => $branche,
+            'location'  => $city,
+            'contact'   => $web_berater,
+            'contact_mail'      => $web_berater_email,
+            'lang'      => ($language == 'Englisch' || strstr($language,"en") ) ? 'en' : 'de',
+            "full_text" => $searchText,
+            'rewrite_link' => $rewriteLink,
+
+            // Title & Desc
+            'seo_title' => $title,
+            'seo_desc' => $google_desc,
+
+            // Detail Daten
+            "job_intro" => $intro,
+            "Web_Detailslink" => $detailslink,
+            "job_description" => $position,
+            "job_candidate" => $candidate,
+            "job_resume" => $resume,
+            "job_desirability" => $attraktivitaet,
+        );
+
+        $this->data = $row;
+    }
+
+    /**
+     * @param JobMirror $jobMirror
+     * @return bool
+     */
+    public function identicalToMirror($jobMirror){
+        $jobData = $this->getData();
+        $mirrorJobData = json_decode($jobMirror->data, true);
+
+        foreach($jobData as $key => $value){
+
+            if($value != $mirrorJobData[$key]){
+                return false;
+            }
+
+        }
+
+        return true;
+
+    }
+
+    protected function log($string){
+        $this->log[] = $string;
+    }
+
+    protected function getLog(){
+        return $this->log;
+    }
+
+    private function formatDate($date)
+    {
+        if(substr_count($date, "/") > 0){
+            $date = explode("/", $date);
+            /*
+             *                   0    1   2
+             * Eingangsformat: Monat/Tag/Jahr
+             *
+             *                   2    0   1
+             * Ausgangsformat: Jahr-Monat-Tag
+             */
+            $date = $date[2]."-".$date[0]."-".$date[1];
+        }
+        elseif(substr_count($date, ".") > 0){
+            $date = explode(".", $date);
+            /*
+             *                    0   1    2
+             * Eingangsformat: Monat/Tag/Jahr
+             *
+             *                   2    0    1
+             * Ausgangsformat: Jahr-Monat-Tag
+             */
+            $date = $date[2]."-".$date[0]."-".$date[1];
+        }
+        return $date;
+    }
 
 }

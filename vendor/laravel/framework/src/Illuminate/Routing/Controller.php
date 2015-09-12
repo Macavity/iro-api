@@ -36,7 +36,7 @@ abstract class Controller {
 	/**
 	 * Register a "before" filter on the controller.
 	 *
-	 * @param  \Closure|string  $name
+	 * @param  \Closure|string  $filter
 	 * @param  array  $options
 	 * @return void
 	 */
@@ -48,7 +48,7 @@ abstract class Controller {
 	/**
 	 * Register an "after" filter on the controller.
 	 *
-	 * @param  \Closure|string  $name
+	 * @param  \Closure|string  $filter
 	 * @param  array  $options
 	 * @return void
 	 */
@@ -60,7 +60,7 @@ abstract class Controller {
 	/**
 	 * Parse the given filter and options.
 	 *
-	 * @param  \Closure|string  $name
+	 * @param  \Closure|string  $filter
 	 * @param  array  $options
 	 * @return array
 	 */
@@ -133,6 +133,43 @@ abstract class Controller {
 	}
 
 	/**
+	 * Remove the given before filter.
+	 *
+	 * @param  string  $filter
+	 * @return void
+	 */
+	public function forgetBeforeFilter($filter)
+	{
+		$this->beforeFilters = $this->removeFilter($filter, $this->getBeforeFilters());
+	}
+
+	/**
+	 * Remove the given after filter.
+	 *
+	 * @param  string  $filter
+	 * @return void
+	 */
+	public function forgetAfterFilter($filter)
+	{
+		$this->afterFilters = $this->removeFilter($filter, $this->getAfterFilters());
+	}
+
+	/**
+	 * Remove the given controller filter from the provided filter array.
+	 *
+	 * @param  string  $removing
+	 * @param  array  $current
+	 * @return array
+	 */
+	protected function removeFilter($removing, $current)
+	{
+		return array_filter($current, function($filter) use ($removing)
+		{
+			return $filter['original'] != $removing;
+		});
+	}
+
+	/**
 	 * Get the registered "before" filters.
 	 *
 	 * @return array
@@ -183,8 +220,8 @@ abstract class Controller {
 	/**
 	 * Execute an action on the controller.
 	 *
-	 * @param string  $method
-	 * @param array   $parameters
+	 * @param  string  $method
+	 * @param  array   $parameters
 	 * @return \Symfony\Component\HttpFoundation\Response
 	 */
 	public function callAction($method, $parameters)
@@ -223,6 +260,8 @@ abstract class Controller {
 	 * @param  string  $method
 	 * @param  array   $parameters
 	 * @return mixed
+	 *
+	 * @throws \BadMethodCallException
 	 */
 	public function __call($method, $parameters)
 	{

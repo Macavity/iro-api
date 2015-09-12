@@ -66,11 +66,13 @@ class CookieJar {
 	 * Expire the given cookie.
 	 *
 	 * @param  string  $name
+	 * @param  string  $path
+	 * @param  string  $domain
 	 * @return \Symfony\Component\HttpFoundation\Cookie
 	 */
-	public function forget($name)
+	public function forget($name, $path = null, $domain = null)
 	{
-		return $this->make($name, null, -2628000);
+		return $this->make($name, null, -2628000, $path, $domain);
 	}
 
 	/**
@@ -99,7 +101,7 @@ class CookieJar {
 	/**
 	 * Queue a cookie to send with the next response.
 	 *
-	 * @param  dynamic
+	 * @param  mixed
 	 * @return void
 	 */
 	public function queue()
@@ -119,7 +121,7 @@ class CookieJar {
 	/**
 	 * Remove a cookie from the queue.
 	 *
-	 * @param $cookieName
+	 * @param  string  $name
 	 */
 	public function unqueue($name)
 	{
@@ -143,7 +145,7 @@ class CookieJar {
 	 *
 	 * @param  string  $path
 	 * @param  string  $domain
-	 * @return self
+	 * @return $this
 	 */
 	public function setDefaultPathAndDomain($path, $domain)
 	{
