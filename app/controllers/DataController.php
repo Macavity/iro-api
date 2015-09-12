@@ -514,7 +514,72 @@ class DataController extends BaseController {
 
     }
 
-    public function jobDetail($serial, $jobId)
+    public function jobDetailFallback($serial, $jobId)
+    {
+        $jobMirror = JobMirror::where('client', '=', $this->client->id)->where('job_id','=',$jobId)->first();
+
+        try
+        {
+            $this->initClient($serial);
+
+            $this->trackPageHit('/data/job-detail/'.$jobId);
+
+            $this->trackEvent('job-detail', $jobId);
+
+            $this->initializeFileMaker();
+
+            $record = $this->findFileMakerJobById($jobId);
+
+            $job = new Job($record);
+            $jobId = $job->getId();
+            $jobData = $job->getData();
+
+            if(!$jobMirror) {
+                $jobMirror = new JobMirror();
+                $jobMirror->client = $this->client->id;
+                $jobMirror->job_id = $jobId;
+            }
+
+            // Update Fallback Data
+            $jobMirror->data = json_encode($jobData);
+            $jobMirror->save();
+
+            $this->log("Live Version");
+
+            return Response::json(array(
+                'result' => $jobData,
+                'log' => $this->getLog(),
+            ));
+
+        }
+        catch(Exception $e)
+        {
+            if($jobMirror){
+                $this->log("Fallback version");
+
+                return Response::json(array(
+                    'result' => json_decode($jobMirror->data),
+                    'error' => $e->getMessage(),
+                    'code' => $e->getCode(),
+                    'log' => $this->getLog(),
+                ));
+            }
+
+            return Response::json(array(
+                'error' => $e->getMessage(),
+                'code' => $e->getCode(),
+            ));
+
+        }
+    }
+
+    /**
+     * @deprecated
+     * @param $serial
+     * @param $jobId
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function jobDetailCheck($serial, $jobId)
     {
         try {
             $this->initClient($serial);

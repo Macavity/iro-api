@@ -55,7 +55,13 @@ Route::group(array('prefix' => 'data'), function()
 
 
     Route::get('/{serial}/job-detail/{jobId}', array(
-        'uses' => 'DataController@jobDetail'
+        'uses' => 'DataController@jobDetailFallback'
+    ))
+        ->where('serial', '[A-Za-z\-\d+]+')
+        ->where('jobId', '[\d]+');
+
+    Route::get('/{serial}/job-detail-check/{jobId}', array(
+        'uses' => 'DataController@jobDetailCheck'
     ))
         ->where('serial', '[A-Za-z\-\d+]+')
         ->where('jobId', '[\d]+');
