@@ -72,15 +72,23 @@ class Guard {
 	protected $loggedOut = false;
 
 	/**
+	 * Indicates if a token user retrieval has been attempted.
+	 *
+	 * @var bool
+	 */
+	protected $tokenRetrievalAttempted = false;
+
+	/**
 	 * Create a new authentication guard.
 	 *
 	 * @param  \Illuminate\Auth\UserProviderInterface  $provider
 	 * @param  \Illuminate\Session\Store  $session
+	 * @param  \Symfony\Component\HttpFoundation\Request  $request
 	 * @return void
 	 */
 	public function __construct(UserProviderInterface $provider,
-                                SessionStore $session,
-                                Request $request = null)
+								SessionStore $session,
+								Request $request = null)
 	{
 		$this->session = $session;
 		$this->request = $request;
@@ -150,16 +158,42 @@ class Guard {
 	}
 
 	/**
+	 * Get the ID for the currently authenticated user.
+	 *
+	 * @return int|null
+	 */
+	public function id()
+	{
+		if ($this->loggedOut) return;
+
+		$id = $this->session->get($this->getName(), $this->getRecallerId());
+
+		if (is_null($id) && $this->user())
+		{
+			$id = $this->user()->getAuthIdentifier();
+		}
+
+		return $id;
+	}
+
+	/**
 	 * Pull a user from the repository by its recaller ID.
 	 *
-	 * @param  mixed  $id
+	 * @param  string  $recaller
 	 * @return mixed
 	 */
-	protected function getUserByRecaller($id)
+	protected function getUserByRecaller($recaller)
 	{
-		$this->viaRemember = ! is_null($user = $this->provider->retrieveByID($id));
+		if ($this->validRecaller($recaller) && ! $this->tokenRetrievalAttempted)
+		{
+			$this->tokenRetrievalAttempted = true;
 
-		return $user;
+			list($id, $token) = explode('|', $recaller, 2);
+
+			$this->viaRemember = ! is_null($user = $this->provider->retrieveByToken($id, $token));
+
+			return $user;
+		}
 	}
 
 	/**
@@ -170,6 +204,34 @@ class Guard {
 	protected function getRecaller()
 	{
 		return $this->request->cookies->get($this->getRecallerName());
+	}
+
+	/**
+	 * Get the user ID from the recaller cookie.
+	 *
+	 * @return string
+	 */
+	protected function getRecallerId()
+	{
+		if ($this->validRecaller($recaller = $this->getRecaller()))
+		{
+			return head(explode('|', $recaller));
+		}
+	}
+
+	/**
+	 * Determine if the recaller cookie is in a valid format.
+	 *
+	 * @param  string  $recaller
+	 * @return bool
+	 */
+	protected function validRecaller($recaller)
+	{
+		if ( ! is_string($recaller) || ! str_contains($recaller, '|')) return false;
+
+		$segments = explode('|', $recaller);
+
+		return count($segments) == 2 && trim($segments[0]) !== '' && trim($segments[1]) !== '';
 	}
 
 	/**
@@ -357,14 +419,16 @@ class Guard {
 	 */
 	public function login(UserInterface $user, $remember = false)
 	{
-		$this->updateSession($id = $user->getAuthIdentifier());
+		$this->updateSession($user->getAuthIdentifier());
 
 		// If the user should be permanently "remembered" by the application we will
 		// queue a permanent cookie that contains the encrypted copy of the user
 		// identifier. We will then decrypt this later to retrieve the users.
 		if ($remember)
 		{
-			$this->queueRecallerCookie($id);
+			$this->createRememberTokenIfDoesntExist($user);
+
+			$this->queueRecallerCookie($user);
 		}
 
 		// If we have an event dispatcher instance set we will fire an event so that
@@ -423,23 +487,25 @@ class Guard {
 	/**
 	 * Queue the recaller cookie into the cookie jar.
 	 *
-	 * @param  string  $id
+	 * @param  \Illuminate\Auth\UserInterface  $user
 	 * @return void
 	 */
-	protected function queueRecallerCookie($id)
+	protected function queueRecallerCookie(UserInterface $user)
 	{
-		$this->getCookieJar()->queue($this->createRecaller($id));
+		$value = $user->getAuthIdentifier().'|'.$user->getRememberToken();
+
+		$this->getCookieJar()->queue($this->createRecaller($value));
 	}
 
 	/**
 	 * Create a remember me cookie for a given ID.
 	 *
-	 * @param  mixed  $id
+	 * @param  string  $value
 	 * @return \Symfony\Component\HttpFoundation\Cookie
 	 */
-	protected function createRecaller($id)
+	protected function createRecaller($value)
 	{
-		return $this->getCookieJar()->forever($this->getRecallerName(), $id);
+		return $this->getCookieJar()->forever($this->getRecallerName(), $value);
 	}
 
 	/**
@@ -455,6 +521,11 @@ class Guard {
 		// so any further processing can be done. This allows the developer to be
 		// listening for anytime a user signs out of this application manually.
 		$this->clearUserDataFromStorage();
+
+		if ( ! is_null($this->user))
+		{
+			$this->refreshRememberToken($user);
+		}
 
 		if (isset($this->events))
 		{
@@ -481,6 +552,35 @@ class Guard {
 		$recaller = $this->getRecallerName();
 
 		$this->getCookieJar()->queue($this->getCookieJar()->forget($recaller));
+	}
+
+	/**
+	 * Refresh the remember token for the user.
+	 *
+	 * @param  \Illuminate\Auth\UserInterface  $user
+	 * @return void
+	 */
+	protected function refreshRememberToken(UserInterface $user)
+	{
+		$user->setRememberToken($token = str_random(60));
+
+		$this->provider->updateRememberToken($user, $token);
+	}
+
+	/**
+	 * Create a new remember token for the user if one doesn't already exist.
+	 *
+	 * @param  \Illuminate\Auth\UserInterface  $user
+	 * @return void
+	 */
+	protected function createRememberTokenIfDoesntExist(UserInterface $user)
+	{
+		$rememberToken = $user->getRememberToken();
+
+		if (empty($rememberToken))
+		{
+			$this->refreshRememberToken($user);
+		}
 	}
 
 	/**
@@ -525,6 +625,7 @@ class Guard {
 	 * Set the event dispatcher instance.
 	 *
 	 * @param  \Illuminate\Events\Dispatcher
+	 * @return void
 	 */
 	public function setDispatcher(Dispatcher $events)
 	{
@@ -599,7 +700,7 @@ class Guard {
 	 * Set the current request instance.
 	 *
 	 * @param  \Symfony\Component\HttpFoundation\Request
-	 * @return \Illuminate\Auth\Guard
+	 * @return $this
 	 */
 	public function setRequest(Request $request)
 	{

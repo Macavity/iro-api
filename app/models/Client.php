@@ -10,6 +10,10 @@
  * @property String     $serial
  * @property String     $fm_user
  * @property String     $fm_password
+ * @property String     $cache_type
+ * @property Integer    $cache_time
+ * @property Integer    $cache_time_detail
+ * @property String     $last_refresh
  *
  */
 class Client extends Eloquent {
@@ -32,8 +36,11 @@ class Client extends Eloquent {
         'serial' => 'Seriennummer',
         'fm_user' => 'FM Benutzer',
         'fm_password' => 'FM Passwort',
-        'cache_time' => 'Cache Dauer',
+        'cache_time' => 'Cache Dauer (Liste)',
+        'cache_time_detail' => 'Cache Dauer (Single)',
+        'cache_type' => 'Art des Caches',
         'api_token' => 'API Token',
+        'last_refresh' => 'Letzter Import',
     );
 
 

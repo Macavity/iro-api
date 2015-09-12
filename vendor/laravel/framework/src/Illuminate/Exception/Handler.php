@@ -57,6 +57,7 @@ class Handler {
 	 * @param  \Illuminate\Support\Contracts\ResponsePreparerInterface  $responsePreparer
 	 * @param  \Illuminate\Exception\ExceptionDisplayerInterface  $plainDisplayer
 	 * @param  \Illuminate\Exception\ExceptionDisplayerInterface  $debugDisplayer
+	 * @param  bool  $debug
 	 * @return void
 	 */
 	public function __construct(ResponsePreparerInterface $responsePreparer,
@@ -102,7 +103,7 @@ class Handler {
 	 */
 	protected function registerExceptionHandler()
 	{
-		set_exception_handler(array($this, 'handleException'));
+		set_exception_handler(array($this, 'handleUncaughtException'));
 	}
 
 	/**
@@ -126,11 +127,11 @@ class Handler {
 	 *
 	 * @throws \ErrorException
 	 */
-	public function handleError($level, $message, $file, $line, $context)
+	public function handleError($level, $message, $file = '', $line = 0, $context = array())
 	{
 		if (error_reporting() & $level)
 		{
-			throw new ErrorException($message, $level, 0, $file, $line);
+			throw new ErrorException($message, 0, $level, $file, $line);
 		}
 	}
 
@@ -138,7 +139,7 @@ class Handler {
 	 * Handle an exception for the application.
 	 *
 	 * @param  \Exception  $exception
-	 * @return void
+	 * @return \Symfony\Component\HttpFoundation\Response
 	 */
 	public function handleException($exception)
 	{
@@ -149,31 +150,24 @@ class Handler {
 		// type of exceptions to handled by a Closure giving great flexibility.
 		if ( ! is_null($response))
 		{
-			$response = $this->prepareResponse($response);
+			return $this->prepareResponse($response);
 		}
 
 		// If no response was sent by this custom exception handler, we will call the
 		// default exception displayer for the current application context and let
 		// it show the exception to the user / developer based on the situation.
-		else
-		{
-			$response = $this->displayException($exception);
-		}
-
-		return $this->sendResponse($response);
+		return $this->displayException($exception);
 	}
 
 	/**
-	 * Send the repsonse back to the client.
+	 * Handle an uncaught exception.
 	 *
-	 * @param  \Symfony\Component\HttpFoundation\Response  $response
-	 * @return mixed
+	 * @param  \Exception  $exception
+	 * @return void
 	 */
-	protected function sendResponse($response)
+	public function handleUncaughtException($exception)
 	{
-		return $this->responsePreparer->readyForResponses() && ! $this->runningInConsole()
-								? $response
-								: $response->send();
+		$this->handleException($exception)->send();
 	}
 
 	/**
@@ -206,7 +200,7 @@ class Handler {
 	 */
 	protected function isFatal($type)
 	{
-        return in_array($type, array(E_ERROR, E_CORE_ERROR, E_COMPILE_ERROR, E_PARSE));
+		return in_array($type, array(E_ERROR, E_CORE_ERROR, E_COMPILE_ERROR, E_PARSE));
 	}
 
 	/**
@@ -289,7 +283,7 @@ class Handler {
 	/**
 	 * Determine if the given handler handles this exception.
 	 *
-	 * @param  Closure    $handler
+	 * @param  \Closure    $handler
 	 * @param  \Exception  $exception
 	 * @return bool
 	 */
@@ -303,7 +297,7 @@ class Handler {
 	/**
 	 * Determine if the given handler type hints the exception.
 	 *
-	 * @param  ReflectionFunction  $reflection
+	 * @param  \ReflectionFunction  $reflection
 	 * @param  \Exception  $exception
 	 * @return bool
 	 */
@@ -337,7 +331,7 @@ class Handler {
 	/**
 	 * Register an application error handler.
 	 *
-	 * @param  Closure  $callback
+	 * @param  \Closure  $callback
 	 * @return void
 	 */
 	public function error(Closure $callback)
@@ -348,7 +342,7 @@ class Handler {
 	/**
 	 * Register an application error handler at the bottom of the stack.
 	 *
-	 * @param  Closure  $callback
+	 * @param  \Closure  $callback
 	 * @return void
 	 */
 	public function pushError(Closure $callback)
