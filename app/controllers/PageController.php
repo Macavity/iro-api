@@ -584,7 +584,13 @@ class PageController extends BaseController {
                         $newValue = $record->getField($item['field']) .
                             "\n===============\nXING Import: \n\n" . $newValue."\n===============\n";
                     }
-                    $record->setField($item['field'], $newValue);
+                    if($this->client->version == 2){
+                        $record->setField('Notiz', $newValue);
+                        $record->setField('ZNotiz', $newValue);
+                    }
+                    else{
+                        $record->setField($item['field'], $newValue);
+                    }
                 }
             }
         }
