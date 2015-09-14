@@ -225,7 +225,7 @@ class Job extends Eloquent {
 
         foreach($jobData as $key => $value){
 
-            if($value != $mirrorJobData[$key]){
+            if(!isset($mirrorJobData[$key]) || $value != $mirrorJobData[$key]){
                 return false;
             }
 
