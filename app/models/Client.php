@@ -60,6 +60,8 @@ class Client extends Eloquent {
 
     public function getCacheId($type){
         switch($type){
+            case 'joblist-algolia':
+                return $this->id."-joblist-algolia";
             case 'joblist':
                 return $this->id."-joblist-normal";
             case 'joblist-archive':
