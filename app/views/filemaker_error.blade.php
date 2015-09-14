@@ -8,7 +8,7 @@
                 @if (count($log))
                 <ul>
                     @foreach( $log as $item)
-                        <li class="{{ $item['visible'] ? '' : 'hidden'  }}">{{{ $item['text'] }}}</li>
+                        <li class="{{ $item['visible'] ? '' : $debugClass  }}">{{{ $item['text'] }}}</li>
                     @endforeach
                 </ul>
                 @endif

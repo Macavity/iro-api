@@ -41,13 +41,20 @@ class AlgoliaController extends DataController {
 
     }
 
-    public function checkCache($serial, $type = "modified"){
+    public function checkCache($serial, $type = "modified")
+    {
         set_time_limit(0);
         ini_set('max_execution_time', '0');
 
+        $debugVisible = Input::get('debug', false);
+        $forceImport = Input::get('force-import', false);
+
+        $debugClass = ($debugVisible) ? '' : 'hidden';
+
         // Type: open - Get all open projects
         // Type: modified (default) - get all modified projects since the last import
-        try {
+        try
+        {
 
             $this->initClient($serial);
 
@@ -60,19 +67,24 @@ class AlgoliaController extends DataController {
 
             $lastRefresh = $this->client->getAttribute("last_refresh");
 
-            if(empty($lastRefresh) || $lastRefresh == false){
+            if(empty($lastRefresh) || $lastRefresh == false)
+            {
                 $type = "open";
                 $this->log("No earlier refresh found => Switch type to all public jobs");
             }
 
-            if($type == "open"){
+            if($type == "open")
+            {
                 // Rare Call: Get all Public Projects
                 $records = $this->findPublicFileMakerJobs();
             }
-            else{
+            else
+            {
                 // Common Call: Get last changed and then retrieve only changed records
                 $records = $this->findModifiedJobs($lastRefresh);
             }
+            $this->log("Typ: ".$type);
+            $this->log("Anzahl Records: ".count($records));
 
             $changedProjects = array();
 
@@ -80,11 +92,13 @@ class AlgoliaController extends DataController {
             {
                 foreach($records as $record)
                 {
-                    try {
+                    try
+                    {
                         $job = new Job($record);
 
                         $jobId = $job->getId();
                         $jobData = $job->getData();
+
 
                         $inMirror = empty($mirrorByJobId[$jobId]) ? false : true;
                         $isIdentical = false;
@@ -94,15 +108,20 @@ class AlgoliaController extends DataController {
                          */
                         $jobMirror = JobMirror::where('client', '=', $this->client->id)->where('job_id', '=', $jobId)->first();
 
-                        if ($jobMirror) {
+                        if ($jobMirror)
+                        {
                             $isIdentical = $job->identicalToMirror($jobMirror);
 
-                            if ($isIdentical) {
-                                $this->log("Job " . $jobId . " ist mit MySQL Fallback identisch.");
-
-                                // No update in Algolia necessary.
-                            } else {
-                                $this->log("Job " . $jobId . " unterscheidet sich vom MySQL Fallback.");
+                            if(!$isIdentical || $forceImport)
+                            {
+                                if(!$isIdentical)
+                                {
+                                    $this->log("Job " . $jobId . " unterscheidet sich vom MySQL Fallback.");
+                                }
+                                else
+                                {
+                                    $this->log("Force Import: Job " . $jobId . "");
+                                }
 
                                 $jobMirror->data = json_encode($jobData);
                                 $jobMirror->save();
@@ -112,8 +131,16 @@ class AlgoliaController extends DataController {
                                 // Update Algolia
                                 $changedProjects[] = $jobData;
                             }
+                            else
+                            {
+                                $this->log("Job " . $jobId . " ist mit MySQL Fallback identisch.");
 
-                        } else {
+                                // No update in Algolia necessary.
+                            }
+
+                        }
+                        else
+                        {
                             $jobMirror = new JobMirror();
                             $jobMirror->client = $this->client->id;
                             $jobMirror->job_id = $jobId;
@@ -122,11 +149,14 @@ class AlgoliaController extends DataController {
                             $jobMirror->save();
                             $this->log("Job $jobId wurde in MySQL Fallback eingefügt.");
 
-                            if ($jobData['visible'] == PANEON_JOB_TYPE_NORMAL) {
+                            if ($jobData['visible'] == PANEON_JOB_TYPE_NORMAL)
+                            {
                                 // Insert into Algolia
                                 $changedProjects[] = $jobData;
                                 $this->log("Job $jobId wird in Algolia eingefügt.");
-                            } else {
+                            }
+                            else
+                            {
                                 // Don't insert hidden/archived jobs into Algolia
                             }
                         }
@@ -141,7 +171,7 @@ class AlgoliaController extends DataController {
                     }
                     catch(Exception $e)
                     {
-                        $this->log(__LINE__.' '.$e->getMessage());
+                        $this->log($e->getMessage());
                         break;
                     }
 
@@ -149,7 +179,8 @@ class AlgoliaController extends DataController {
 
                 //print_r($changedProjects);
 
-                if(count($changedProjects)){
+                if(count($changedProjects))
+                {
                     $this->searchIndex->saveObjects($changedProjects);
                     $this->log(count($changedProjects)." wurden in Suchindex {$this->searchIndexName} importiert.", true);
                 }
@@ -158,21 +189,25 @@ class AlgoliaController extends DataController {
                 $this->client->save();
                 $this->log("Setze last_refresh auf: ".strftime("%d.%m.%Y %H:%M:%S", $this->client->last_refresh));
             }
-            else {
+            else
+            {
                 $this->log("no records found");
             }
         }
-        catch(Exception $e){
+        catch(Exception $e)
+        {
             return View::make('filemaker_error', array(
                 'error' => $e->getMessage(),
                 'code' => $e->getCode(),
                 'log' => $this->getLog(),
+                'debugClass' => $debugClass,
             ));
         }
 
 
         return View::make('search.successful', array(
             'log' => $this->getLog(),
+            'debugClass' => $debugClass,
         ));
 
     }
