@@ -16,8 +16,14 @@ class AlgoliaController extends DataController {
 
     private $searchIndexName;
 
-    public function initSearchClient(){
-        $this->searchClient = new AlgoliaSearch\Client("52TJDTSW2T", "8a93393a5414d81d7acb2c88b663621f");
+    public function initSearchClient($writeAccess = false){
+
+        if($writeAccess){
+            $this->searchClient = new AlgoliaSearch\Client("52TJDTSW2T", "8a93393a5414d81d7acb2c88b663621f");
+        }
+        else {
+            $this->searchClient = new AlgoliaSearch\Client("52TJDTSW2T", "e21927dbe7c24f907731a480f4ffd68c");
+        }
 
         // Pape
         if($this->client->id == 2 || $this->client->id == 14){
@@ -28,8 +34,88 @@ class AlgoliaController extends DataController {
         }
 
         $this->searchIndex = $this->searchClient->initIndex($this->searchIndexName);
+        return true;
     }
 
+    public function jobListAll($serial){
+        $cacheId = "empty";
+
+        $useCaching = false;
+
+        $cacheIsUsed = false;
+
+        $cacheForceRefresh = (Input::get('force-refresh') == 1);
+
+
+        try {
+
+            $this->initClient($serial);
+
+            $this->initSearchClient();
+            $this->searchIndexName = 'pape_listing';
+            $this->searchIndex = $this->searchClient->initIndex($this->searchIndexName);
+
+            $this->initializeFileMaker();
+
+            $cacheId = $this->client->getCacheId('joblist-algolia');
+
+            if($useCaching && Cache::has($cacheId) && $cacheForceRefresh == false){
+                $result = Cache::get($cacheId);
+                $cacheIsUsed = true;
+                $this->log("Cache active");
+
+                $this->trackPageHit('/joblist/cached');
+                $this->trackEvent('joblist', 'cached call');
+
+            }
+            else {
+                if($cacheForceRefresh){
+                    $this->trackEvent('joblist', 'forced-refresh');
+                    $this->trackPageHit('/joblist/forcedRefresh');
+                }
+                else {
+                    $this->trackEvent('joblist', 'normal');
+                    $this->trackPageHit('/joblist/fresh');
+                }
+
+                $this->log("find Public Jobs");
+                $result = $this->searchIndex->search('', array());
+
+                // Cache the joblist for 24 Hours
+                if($useCaching){
+                    $expiresAt = Carbon::now()->addHours(1);
+
+                    Cache::put($cacheId, $result, $expiresAt);
+                    $this->log("cached ($cacheId) for 1h");
+                }
+            }
+
+            return Response::json(array(
+                'cacheActive' => $cacheIsUsed,
+                'cacheId' => $cacheId,
+                'results' => $result,
+                'log' => $this->getLog(),
+            ));
+        }
+        catch(Exception $e){
+
+            return Response::json(array(
+                'error' => $e->getMessage(),
+                'code' => $e->getCode(),
+                'serial' => $serial,
+                'cacheId' => $cacheId,
+                'cacheActive' => $cacheIsUsed,
+                'log' => $this->getLog(),
+            ));
+        }
+    }
+
+    /**
+     * @deprecated
+     * @param $serial
+     * @param string $type
+     * @return \Illuminate\View\View
+     */
     public function import($serial, $type = "new")
     {
         if($type == "new"){
@@ -58,7 +144,7 @@ class AlgoliaController extends DataController {
 
             $this->initClient($serial);
 
-            $this->initSearchClient();
+            $this->initSearchClient(true);
 
             $this->initializeFileMaker();
 
