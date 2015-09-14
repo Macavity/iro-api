@@ -77,6 +77,10 @@ Route::group(array('prefix' => 'search'), function()
     Route::get('{serial}/import/{type?}', 'AlgoliaController@import')
         ->where('serial', '[A-Za-z\-\d+]+');
 
+    // Joblist
+    Route::get('{serial}/joblist', 'AlgoliaController@jobListAll')
+        ->where('serial', '[A-Za-z\-\d+]+');
+
     // Refresh Cache
     Route::get('{serial}/check-cache/jobs/{type?}', 'AlgoliaController@checkCache')
         ->where('serial', '[A-Za-z\-\d+]+');

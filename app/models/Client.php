@@ -8,6 +8,7 @@
  * @property String     $host
  * @property String     $db_name
  * @property String     $serial
+ * @property Integer    $version
  * @property String     $fm_user
  * @property String     $fm_password
  * @property String     $cache_type
@@ -34,6 +35,7 @@ class Client extends Eloquent {
         'host' => 'Host',
         'db_name' => 'Datenbankname',
         'serial' => 'Seriennummer',
+        'version' => 'API Version',
         'fm_user' => 'FM Benutzer',
         'fm_password' => 'FM Passwort',
         'cache_time' => 'Cache Dauer (Liste)',
@@ -58,6 +60,8 @@ class Client extends Eloquent {
 
     public function getCacheId($type){
         switch($type){
+            case 'joblist-algolia':
+                return $this->id."-joblist-algolia";
             case 'joblist':
                 return $this->id."-joblist-normal";
             case 'joblist-archive':
