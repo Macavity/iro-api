@@ -79,7 +79,10 @@ class AlgoliaController extends DataController {
                 }
 
                 $this->log("find Public Jobs");
-                $result = $this->searchIndex->search('', array());
+                $result = $this->searchIndex->search('', array(
+                    'numericFilters' => 'visible=1'
+                ));
+
 
                 // Cache the joblist for 24 Hours
                 if($useCaching){
@@ -149,7 +152,7 @@ class AlgoliaController extends DataController {
             $this->initializeFileMaker();
 
             //$this->trackPageHit('/search/check-cache/jobs/'.$type);
-            $this->trackPageHit('/'.$serial.'/search/check-cache/jobs/'.$type);
+            $this->trackPageHit('/search/check-cache/jobs/'.$type);
 
             $lastRefresh = $this->client->getAttribute("last_refresh");
 
@@ -173,6 +176,7 @@ class AlgoliaController extends DataController {
             $this->log("Anzahl Records: ".count($records));
 
             $changedProjects = array();
+            $removedProjects = array();
 
             if(FileMaker::isError($records) == false)
             {
