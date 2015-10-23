@@ -1,6 +1,6 @@
 <?php
 
-error_reporting(E_ALL ^ E_DEPRECATED ^ E_STRICT ^ E_NOTICE);
+error_reporting(E_ALL ^ E_DEPRECATED ^ E_STRICT);
 
 return array(
 
@@ -15,7 +15,7 @@ return array(
 	|
 	*/
 
-	'debug' => true,
+	'debug' => false,
 
 	/*
 	|--------------------------------------------------------------------------
@@ -28,7 +28,7 @@ return array(
 	|
 	*/
 
-	'url' => 'http://api.paneon.de',
+	'url' => 'http://api-dev.paneon.de',
 
 	/*
 	|--------------------------------------------------------------------------
@@ -150,7 +150,6 @@ return array(
 		'Auth'            => 'Illuminate\Support\Facades\Auth',
 		'Blade'           => 'Illuminate\Support\Facades\Blade',
 		'Cache'           => 'Illuminate\Support\Facades\Cache',
-        'Carbon'          => 'Carbon\Carbon',
 		'ClassLoader'     => 'Illuminate\Support\ClassLoader',
 		'Config'          => 'Illuminate\Support\Facades\Config',
 		'Controller'      => 'Illuminate\Routing\Controller',
@@ -183,10 +182,8 @@ return array(
 		'URL'             => 'Illuminate\Support\Facades\URL',
 		'Validator'       => 'Illuminate\Support\Facades\Validator',
 		'View'            => 'Illuminate\Support\Facades\View',
-
         // GAMP
         'GAMP'            => 'Irazasyed\LaravelGAMP\Facades\GAMP',
-
 	),
 
 );
