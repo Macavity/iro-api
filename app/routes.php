@@ -148,6 +148,8 @@ Route::get('/debug/fm', function(){
 
 Route::get('debug/test', function(){
 
+    echo "<br>Environment: ".App::environment();
+
     $curlUrl = 'http://www.xing.de/';
 
     $curlHandle = curl_init($curlUrl);
