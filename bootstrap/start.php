@@ -24,18 +24,41 @@ $app = new Illuminate\Foundation\Application;
 |
 */
 
-$env = $app->detectEnvironment(array(
+$env = $app->detectEnvironment(function(){
+    $server_name = $_SERVER['SERVER_NAME'];
+    $hostname = gethostname();
 
-	'local' => array(
+    $localHosts = array(
         'MacBook-6.local',
         'macbook.fritz.box',
         'MacbookPape.local',
         'localhost',
         'Alexanders-MBP.fritz.box',
-        'pc-w7-124.portalmuc.local'
-    ),
+        'pc-w7-124.portalmuc.local',
+    );
 
-));
+    if($server_name == 'api-dev.paneon.de'){
+        return 'stage';
+    }
+    elseif(in_array($hostname, $localHosts)){
+        return 'local';
+    }
+    else {
+        return 'production';
+    }
+});
+/*
+    array(
+
+    'local' => ,
+
+    'stage' => array(
+        'api-dev.*','api-dev.paneon.de'
+    )));
+*/
+
+
+
 
 /*
 |--------------------------------------------------------------------------
