@@ -96,7 +96,7 @@ class Job extends Eloquent {
         }
 
         $intro = $record->getField('Web_Firmenintro');
-        $detailslink = $record->getField('Web_Detailslink');
+        $detailslink = $record->getField('Web_link');
         $position_name = $record->getField('ProjektName');
         $position = $record->getField('JTBStellenbeschreibung');
 

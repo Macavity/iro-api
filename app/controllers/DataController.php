@@ -14,6 +14,8 @@ class DataController extends BaseController {
         $cacheId = "empty";
         $cacheActive = false;
 
+        $useCaching = false;
+
         $cacheForceRefresh = (Input::get('forceRefresh') == 1);
 
 
@@ -42,7 +44,7 @@ class DataController extends BaseController {
                 $cacheId = $this->client->id."-joblist-normal-".$sortDirection;
             }
 
-            if(Cache::has($cacheId) && $cacheForceRefresh == false){
+            if($useCaching && Cache::has($cacheId) && $cacheForceRefresh == false){
                 $jobList = Cache::get($cacheId);
                 $cacheActive = true;
                 $this->log("Cache active");
