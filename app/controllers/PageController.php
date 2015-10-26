@@ -86,7 +86,7 @@ class PageController extends BaseController {
         try {
             $this->initializeFileMaker();
 
-            $this->fmRecord = $this->findFileMakerRecord($fmId);
+            $this->fmRecord = $this->findFileMakerRecordById($fmId);
 
             $query = Input::get('xinglink','');
 
