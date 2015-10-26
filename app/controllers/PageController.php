@@ -84,6 +84,7 @@ class PageController extends BaseController {
         $this->layout->userName = $this->xingUser->display_name;
 
         try {
+            $this->initializeFileMaker();
 
             $this->fmRecord = $this->findFileMakerRecord($fmId);
 
@@ -605,9 +606,9 @@ class PageController extends BaseController {
     private function doXingLogin()
     {
         $user = null;
-
+    //
         if($this->oAuthClient == null){
-            $this->oAuthClient = $this->getOAuthClient(action('XingController@showXingLogin'));
+            $this->oAuthClient = $this->getOAuthClient();
         }
 
         if(($success = $this->oAuthClient->Initialize()))

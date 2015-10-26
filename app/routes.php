@@ -101,12 +101,10 @@ Route::any('/{serial}/{fmId}', array(
     ->where('fmId', '[\d+]+');
 
 // Systemcheck Xing
-Route::any('/systemcheck/{serial}', array(
-    'as' => 'form',
+Route::any('/{serial}/systemcheck', array(
     'uses' => 'PageController@systemCheck'
 ))
-    ->where('serial', '[A-Za-z\-\d+]+')
-    ->where('fmId', '[\d+]+');
+    ->where('serial', '[A-Za-z\-\d+]+');
 
 /*Route::group(array('prefix' => 'xing'), function(){
     Route::get('/', 'XingController@showIndex');
