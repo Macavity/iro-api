@@ -518,11 +518,13 @@ class DataController extends BaseController {
 
     public function jobDetailFallback($serial, $jobId)
     {
-        $jobMirror = JobMirror::where('client', '=', $this->client->id)->where('job_id','=',$jobId)->first();
+        $jobMirror = false;
 
         try
         {
             $this->initClient($serial);
+
+            $jobMirror = JobMirror::where('client', '=', $this->client->id)->where('job_id','=',$jobId)->first();
 
             $this->trackPageHit('/data/job-detail/'.$jobId);
 
