@@ -32,7 +32,12 @@ ClassLoader::addDirectories(array(
 |
 */
 
-Log::useFiles(storage_path().'/logs/laravel.log');
+if(App::environment() == "stage"){
+    Log::useFiles(storage_path().'/logs/laravel.stage.log');
+}
+else {
+    Log::useFiles(storage_path().'/logs/laravel.log');
+}
 
 /*
 |--------------------------------------------------------------------------
