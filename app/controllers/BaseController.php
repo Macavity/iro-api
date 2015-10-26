@@ -299,6 +299,36 @@ class BaseController extends Controller {
 
     }
 
+    protected function findFileMakerRecordById($fmId)
+    {
+        $this->log("findFileMakerRecordById: ".$fmId);
+        $this->log("Layout: ".$this->fmLayout);
+
+        $findCommand =& $this->fm->newFindCommand($this->fmLayout);
+
+        $findCommand->addFindCriterion('ID','="'.$fmId.'"');
+
+        $result = $findCommand->execute();
+        $this->fmErrorHandling($result);
+
+        $record = $result->getFirstRecord();
+        $this->fmErrorHandling($record);
+
+        $this->fmRecordId = $record->getRecordId();
+        try{
+            $this->fmId = $record->getField('ID');
+
+            $xingLink = trim($record->getField('XING'));
+
+            $this->fmXingLink = (empty($xingLink)) ? "" : $xingLink;
+        }
+        catch(Exception $e){
+            throw(new Exception($e->getMessage(), $e->getCode()));
+        }
+
+        return $record;
+    }
+
     /**
      * @param $jobId
      * @param string $type
