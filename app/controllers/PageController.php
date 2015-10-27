@@ -587,6 +587,9 @@ class PageController extends BaseController {
                         $record->setField('Notiz', $newValue);
                         $record->setField('ZNotiz', $newValue);
                     }
+                    else {
+                        $record->setField($item['field'], $newValue);
+                    }
                 }
             }
         }
