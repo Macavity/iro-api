@@ -11,7 +11,7 @@
         "barryvdh/laravel-ide-helper": "1.*",
         "irazasyed/laravel-gamp": "0.5",
         "algolia/algoliasearch-client-php": "1.5.*",
-        "way/generators": "~2.0"
+        "way/generators": "2.6.1"
 	},
 	"autoload": {
 		"classmap": [
