@@ -447,6 +447,13 @@ class BaseController extends Controller {
                     $message = "Der Speichervorgang konnte auf den Datensatz nicht zugreifen.";
                     break;
             }
+
+            switch($message){
+                case 'Field Not Found':
+                    $message = "Feld fehlt in Layout, bitte kontaktieren Sie den Heads2Hunt Support wegen dieses Fehlers.";
+                    break;
+            }
+
             Log::error("FileMaker Error", array(
                 'serial' => $this->serialNumber,
                 'fmId' => $this->fmId,
