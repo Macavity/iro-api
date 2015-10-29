@@ -288,7 +288,8 @@ class PageController extends BaseController {
             case 'MOBIL': return "Mobil";
             case 'FON | BIZ': return "Geschäft: Telefon";
             case 'MAIL | BIZ': return "Geschäft: E-Mail";
-            case 'Foto | Container': return "Foto";
+            case 'XingPhoto':
+                return "Foto";
 
             default:
                 return $key;
@@ -473,16 +474,16 @@ class PageController extends BaseController {
 
         // Image
         // TODO Save photo to container field (show photo in data)
-        /*if(!empty($userResult->photo_urls)){
+        if(!empty($userResult->photo_urls)){
             if(!empty($userResult->photo_urls->large))
             {
-                $data['Foto | Container'] = $userResult->photo_urls->large;
+                $data['XingPhoto'] = $userResult->photo_urls->large;
             }
             elseif(!empty($userResult->photo_urls->thumb))
             {
-                $data['Foto | Container'] = $userResult->photo_urls->thumb;
+                $data['XingPhoto'] = $userResult->photo_urls->thumb;
             }
-        }*/
+        }
 
         // Address
         if(!empty($userResult->private_address))
@@ -597,6 +598,15 @@ class PageController extends BaseController {
         $result = $record->commit();
 
         $this->fmErrorHandling($result);
+
+        // Initiate the photo image import
+        if(!empty($data['XingPhoto']))
+        {
+            $performScript = $this->fm->newPerformScriptCommand($this->fmLayout, 'Xing Import Fotoimport', $this->fmId);
+            $result = $performScript->execute();
+            
+            $this->fmErrorHandling($result);
+        }
 
         return true;
     }
