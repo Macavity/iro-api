@@ -196,9 +196,12 @@ class AlgoliaController extends DataController {
                         /**
                          * @var JobMirror $jobMirror
                          */
-                        $jobMirror = JobMirror::where('client', '=', $this->client->id)->where('job_id', '=', $jobId)->first();
+                        $jobMirror = JobMirror::firstOrNew(array(
+                            'client' => $this->client->id,
+                            'job_id' => $jobId
+                        ));
 
-                        if ($jobMirror)
+                        if ($jobMirror->id)
                         {
                             $isIdentical = $job->identicalToMirror($jobMirror);
 
@@ -223,7 +226,7 @@ class AlgoliaController extends DataController {
                             }
                             else
                             {
-                                $this->log("Job " . $jobId . " ist mit MySQL Fallback identisch.");
+                                //$this->log("Job " . $jobId . " ist mit MySQL Fallback identisch.");
 
                                 // No update in Algolia necessary.
                             }
