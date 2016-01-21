@@ -9,6 +9,10 @@
 //use Paneon\FileMaker12;
 use TheIconic\Tracking\GoogleAnalytics\Analytics;
 
+use Monolog\Logger;
+use Monolog\Handler\StreamHandler;
+use Monolog\Handler\FirePHPHandler;
+
 /*
  *---------------------------------------------------------------
  * Job Visibility Types
@@ -75,10 +79,22 @@ class BaseController extends Controller {
     protected $fmXingLink;
 
     protected $currentTimestamp;
+
     protected $log = array();
+    protected $logger;
 
     public function __construct(){
         $this->currentTimestamp = time();
+
+
+        $stream = new StreamHandler(storage_path().'logs/'.App::environment().'.request.log', Logger::DEBUG);
+        $firephp = new FirePHPHandler();
+
+        // Create the main logger of the app
+        $this->logger = new Logger('debug_logger');
+        $this->logger->pushHandler($stream);
+        $this->logger->pushHandler($firephp);
+
     }
 
     /**
@@ -178,10 +194,13 @@ class BaseController extends Controller {
             'text' => $string,
             'visible' => $visible,
         );
+        $this->logger->addDebug($string);
     }
 
     protected function getLog(){
-        return $this->log;
+        if(App::environment() !== "production"){
+            return $this->log;
+        }
     }
 
     /**
@@ -475,6 +494,10 @@ class BaseController extends Controller {
         $oAuthClient->debug = 0;
         $oAuthClient->debug_http = 1;
         $oAuthClient->server = 'XING';
+
+        //$oAuthClient->access_token
+        //$oAuthClient->token
+
         if(empty($redirectUrl)){
             $oAuthClient->redirect_uri = route('form', array(
                 'serial' => $this->serialNumber,
