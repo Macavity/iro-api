@@ -177,16 +177,16 @@ class Job extends Eloquent {
         }
 
         $row = array(
-            'fm_id'     => $jobId,
-            'visible'   => $visible,
+            'objectID'     => (int) $jobId,
+            'fm_id'     => (int) $jobId,
 
-            'timestamp' => $lastModified,
+            'timestamp' => (int) $lastModified,
+            'importCalendarDay' => (int) strftime("%Y%j"),
 
-            // Added for algolia
-            'objectID'     => $jobId,
             'last_modified_date' => $lastModifiedReadable,
             'last_modified' => $lastModified,
 
+            'visible'   => $visible,
 
             'formatter' => $webFormat,
             'start_date' => $startDate,

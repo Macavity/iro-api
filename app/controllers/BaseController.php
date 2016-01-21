@@ -194,7 +194,12 @@ class BaseController extends Controller {
             'text' => $string,
             'visible' => $visible,
         );
-        $this->logger->addDebug($string);
+
+        $detailData = array(
+            'client' => $this->client->id,
+        );
+
+        $this->logger->addDebug($string, $detailData);
     }
 
     protected function getLog(){
@@ -355,7 +360,7 @@ class BaseController extends Controller {
      * @throws Exception
      */
     protected function findFileMakerJobById($jobId, $type = "open"){
-        $this->log("findFileMakerJobById: ".$jobId);
+        //$this->log("findFileMakerJobById: ".$jobId);
 
         $findCommand =& $this->fm->newFindCommand($this->fmLayout);
         if($type == "open"){
