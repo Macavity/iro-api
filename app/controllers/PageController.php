@@ -160,6 +160,10 @@ class PageController extends BaseController {
 
 	}
 
+    public function xingform($serial){
+
+    }
+
     public function systemCheck($serial){
 
         /**

@@ -9,6 +9,12 @@ class DataController extends BaseController {
 
     protected $serialNumber;
 
+    private $log;
+
+    public function __construct ()
+    {
+    }
+
     public function jobListAll($serial, $sortDirection = "desc", $type = "normal")
     {
         $cacheId = "empty";
