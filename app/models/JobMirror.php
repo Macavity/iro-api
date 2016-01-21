@@ -10,6 +10,10 @@
  */
 class JobMirror extends Eloquent {
 
-    protected $guarded = array('id', 'client', 'job_id');
+    protected $guarded = array('id');
+    protected $fillable = array('client', 'job_id', 'data');
 
+    public function client(){
+        $this->hasOne('client');
+    }
 }

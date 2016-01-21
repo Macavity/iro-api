@@ -9,11 +9,7 @@ class DataController extends BaseController {
 
     protected $serialNumber;
 
-    private $log;
-
-    public function __construct ()
-    {
-    }
+    protected $log;
 
     public function jobListAll($serial, $sortDirection = "desc", $type = "normal")
     {
@@ -524,13 +520,18 @@ class DataController extends BaseController {
 
     public function jobDetailFallback($serial, $jobId)
     {
-        $jobMirror = false;
+        $this->initClient($serial);
+        //$this->log("Client {$this->client->id}, job_id {$jobId}");
+
+        $jobMirror = JobMirror::firstOrNew(array(
+            'client' => $this->client->id,
+            'job_id' => $jobId
+        ));
+
+        //$this->log("JobMirror ".$jobMirror->id.": Client {$jobMirror->client}, job_id {$jobMirror->job_id}");
 
         try
         {
-            $this->initClient($serial);
-
-            $jobMirror = JobMirror::where('client', '=', $this->client->id)->where('job_id','=',$jobId)->first();
 
             $this->trackPageHit('/data/job-detail/'.$jobId);
 
@@ -544,17 +545,11 @@ class DataController extends BaseController {
             $jobId = $job->getId();
             $jobData = $job->getData();
 
-            if(!$jobMirror) {
-                $jobMirror = new JobMirror();
-                $jobMirror->client = $this->client->id;
-                $jobMirror->job_id = $jobId;
-            }
-
             // Update Fallback Data
             $jobMirror->data = json_encode($jobData);
             $jobMirror->save();
 
-            $this->log("Live Version");
+            //$this->log("Live Version");
 
             return Response::json(array(
                 'result' => $jobData,
@@ -565,7 +560,7 @@ class DataController extends BaseController {
         catch(Exception $e)
         {
             if($jobMirror){
-                $this->log("Fallback version");
+                //$this->log("Fallback version");
 
                 return Response::json(array(
                     'result' => json_decode($jobMirror->data),
@@ -574,6 +569,14 @@ class DataController extends BaseController {
                     'log' => $this->getLog(),
                 ));
             }
+
+            Log::error("Exception in jobDetailFallback", array(
+                'client' => $this->client->id,
+                'jobId' => $jobId,
+                'error' => $e->getMessage(),
+                'code' => $e->getCode(),
+                'log' => $this->getLog(),
+            ));
 
             return Response::json(array(
                 'error' => $e->getMessage(),
