@@ -455,7 +455,6 @@ class BaseController extends Controller {
             $message = $error->getMessage();
             $code = $error->getCode();
             $backtrace = $error->getBacktrace();
-            //Paneon::debug("Backtrace", $backtrace);
 
             switch($code){
                 case 101:
@@ -478,14 +477,17 @@ class BaseController extends Controller {
                     break;
             }
 
-            Log::error("FileMaker Error", array(
+            $context = array(
                 'serial' => $this->serialNumber,
                 'fmId' => $this->fmId,
                 'fmAction' => $this->fmAction,
                 'message' => $error->getMessage(),
                 'code' => $error->getCode(),
                 'backtrace' => $error->getBacktrace(),
-            ));
+            );
+
+            //Log::error("FileMaker Error", $context);
+            $this->logger->addError($error->getMessage(), $context);
 
             throw(new Exception($message, $code));
         }
