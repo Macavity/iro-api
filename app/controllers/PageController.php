@@ -477,9 +477,7 @@ class PageController extends BaseController {
         }
 
         // Image
-        // TODO Save photo to container field (show photo in data)
-        // TODO deactivated for the moment since script throws error
-        /*if(!empty($userResult->photo_urls)){
+        if(!empty($userResult->photo_urls)){
             if(!empty($userResult->photo_urls->large))
             {
                 $data['XingPhoto'] = $userResult->photo_urls->large;
@@ -488,7 +486,7 @@ class PageController extends BaseController {
             {
                 $data['XingPhoto'] = $userResult->photo_urls->thumb;
             }
-        }*/
+        }
 
         // Address
         if(!empty($userResult->private_address))
@@ -626,7 +624,7 @@ class PageController extends BaseController {
         //Paneon\PaneonHelper\Paneon::debug("data",$data);
 
         // Initiate the photo image import
-        /*if(!empty($data['XingPhoto']) && Input::get('XingPhoto') == "yes")
+        if(!empty($data['XingPhoto']) && Input::get('XingPhoto') == "yes")
         {
             $performScript = $this->fm->newPerformScriptCommand($this->fmLayout, 'Xing Import Fotoimport', $this->fmId);
             $this->fmErrorHandling($result);
@@ -634,7 +632,7 @@ class PageController extends BaseController {
             $result = $performScript->execute();
             
             $this->fmErrorHandling($result);
-        }*/
+        }
 
         return true;
     }
