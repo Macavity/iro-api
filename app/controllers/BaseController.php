@@ -598,6 +598,26 @@ class BaseController extends Controller {
         return $cid;
     }
 
+    protected function initLog() {
+        if(!file_exists('log')) {
+            mkdir('log', 0775, true);
+        }
+
+
+        $this->logFile = PATH_PROJECT.'/log/'.strftime("%Y-%m-%d").".export";
+
+        if($this->devImport){
+            $this->logFile .= ".dev";
+        }
+
+        if($this->testRun){
+            $this->logFile .= ".test";
+        }
+
+        $this->logFile .= ".log";
+
+    }
+
     public function removeHTML($text){
 
         // FM 12 liefert decodierte Entities
