@@ -535,7 +535,7 @@ class PageController extends BaseController {
 
         $_SESSION['data'][$this->fmRecordId]['fields'] = $cleanedData;
 
-        //echo "<!-- ".print_r($cleanedData,true)." -->";
+        echo "<!-- ".print_r($cleanedData,true)." -->";
 
         return $cleanedData;
     }
@@ -571,13 +571,27 @@ class PageController extends BaseController {
         // Remove not existing fields
         unset($data['display_name'],$data['photo']);
 
+        $layout = $this->fm->getLayout($this->fmLayout);
+
+        $fieldsInLayout = $layout->getFields();
+        $fieldsInLayout = array_keys($fieldsInLayout);
+
+
         $record = $this->fm->getRecordById($this->fmLayout, $this->fmRecordId);
 
         $this->fmErrorHandling($record);
 
+
         foreach($data as $key => $item)
         {
             $field = str_replace(' ', '_', $key);
+
+
+            if(!in_array($item['field'], $fieldsInLayout)){
+                unset($data[$key]);
+                continue;
+            }
+
 
             if(Input::get($field) == 'yes')
             {
