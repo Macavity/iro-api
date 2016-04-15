@@ -478,7 +478,8 @@ class PageController extends BaseController {
 
         // Image
         // TODO Save photo to container field (show photo in data)
-        if(!empty($userResult->photo_urls)){
+        // TODO deactivated for the moment since script throws error
+        /*if(!empty($userResult->photo_urls)){
             if(!empty($userResult->photo_urls->large))
             {
                 $data['XingPhoto'] = $userResult->photo_urls->large;
@@ -487,7 +488,7 @@ class PageController extends BaseController {
             {
                 $data['XingPhoto'] = $userResult->photo_urls->thumb;
             }
-        }
+        }*/
 
         // Address
         if(!empty($userResult->private_address))
@@ -535,7 +536,7 @@ class PageController extends BaseController {
 
         $_SESSION['data'][$this->fmRecordId]['fields'] = $cleanedData;
 
-        echo "<!-- ".print_r($cleanedData,true)." -->";
+        //echo "<!-- ".print_r($cleanedData,true)." -->";
 
         return $cleanedData;
     }
@@ -574,7 +575,11 @@ class PageController extends BaseController {
         $layout = $this->fm->getLayout($this->fmLayout);
 
         $fieldsInLayout = $layout->getFields();
+
+        $layout->getFields();
+
         $fieldsInLayout = array_keys($fieldsInLayout);
+        //Paneon\PaneonHelper\Paneon::debug("layoutfields", $fieldsInLayout);
 
 
         $record = $this->fm->getRecordById($this->fmLayout, $this->fmRecordId);
@@ -588,6 +593,7 @@ class PageController extends BaseController {
 
 
             if(!in_array($item['field'], $fieldsInLayout)){
+                $this->logger->addWarning("Field missing in Layout -> removed.", array("field" => $item['field']));
                 unset($data[$key]);
                 continue;
             }
@@ -617,14 +623,18 @@ class PageController extends BaseController {
 
         $this->fmErrorHandling($result);
 
+        //Paneon\PaneonHelper\Paneon::debug("data",$data);
+
         // Initiate the photo image import
-        if(!empty($data['XingPhoto']))
+        /*if(!empty($data['XingPhoto']) && Input::get('XingPhoto') == "yes")
         {
             $performScript = $this->fm->newPerformScriptCommand($this->fmLayout, 'Xing Import Fotoimport', $this->fmId);
+            $this->fmErrorHandling($result);
+
             $result = $performScript->execute();
             
             $this->fmErrorHandling($result);
-        }
+        }*/
 
         return true;
     }
