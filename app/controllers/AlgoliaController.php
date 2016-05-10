@@ -40,7 +40,7 @@ class AlgoliaController extends DataController {
     public function jobListAll($serial){
         $cacheId = "empty";
 
-        $useCaching = false;
+        $useCaching = true;
 
         $cacheIsUsed = false;
 
