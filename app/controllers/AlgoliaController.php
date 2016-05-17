@@ -40,7 +40,7 @@ class AlgoliaController extends DataController {
     public function jobListAll($serial){
         $cacheId = "empty";
 
-        $useCaching = true;
+        $useCaching = false;
 
         $cacheIsUsed = false;
 
@@ -84,7 +84,7 @@ class AlgoliaController extends DataController {
                 ));
 
 
-                // Cache the joblist for 24 Hours
+                // Cache the joblist for 1 Hours
                 if($useCaching){
                     $expiresAt = Carbon::now()->addHours(1);
 
