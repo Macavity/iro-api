@@ -7,9 +7,9 @@ class ExampleTest extends TestCase {
 	 *
 	 * @return void
 	 */
-	public function testBasicExample()
+	public function testLoginForm()
 	{
-		$crawler = $this->client->request('GET', '/');
+		$crawler = $this->client->request('GET', '/login');
 
 		$this->assertTrue($this->client->getResponse()->isOk());
 	}

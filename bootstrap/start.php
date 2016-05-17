@@ -25,7 +25,7 @@ $app = new Illuminate\Foundation\Application;
 */
 
 $env = $app->detectEnvironment(function(){
-    $server_name = $_SERVER['SERVER_NAME'];
+    $server_name = isset($_SERVER['SERVER_NAME']) ? $_SERVER['SERVER_NAME'] : "";
     $hostname = gethostname();
 
     $localHosts = array(
