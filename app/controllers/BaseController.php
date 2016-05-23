@@ -82,19 +82,18 @@ class BaseController extends Controller {
 
     protected $log = array();
     protected $logger;
+    protected $clientLogger;
 
     public function __construct(){
         $this->currentTimestamp = time();
 
-
-        $stream = new StreamHandler(storage_path().'logs/'.App::environment().'.request.log', Logger::DEBUG);
+        $stream = new StreamHandler(storage_path().'/logs/'.App::environment().'.request.log', Logger::DEBUG);
         $firephp = new FirePHPHandler();
 
         // Create the main logger of the app
         $this->logger = new Logger('debug_logger');
         $this->logger->pushHandler($stream);
         $this->logger->pushHandler($firephp);
-
     }
 
     /**
@@ -119,6 +118,17 @@ class BaseController extends Controller {
         }
     }
 
+    private function initClientLog($clientId){
+
+        $stream = new StreamHandler(storage_path().'/logs/'.App::environment().'.'.$clientId.'.log', Logger::DEBUG);
+        $firephp = new FirePHPHandler();
+
+        // Create the main logger of the app
+        $this->logger = new Logger('debug_logger');
+        $this->logger->pushHandler($stream);
+        $this->logger->pushHandler($firephp);
+    }
+
     protected function initClient($serial)
     {
         $this->serialNumber = $serial;
@@ -137,6 +147,7 @@ class BaseController extends Controller {
             throw(new Exception("Seriennummer ungültig."));
         }
 
+        $this->initClientLog($this->client->id);
 
     }
 
