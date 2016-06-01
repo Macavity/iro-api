@@ -1,0 +1,15 @@
+<?php
+
+// Production
+return array(
+
+    'consumer_key' => 'Insert your Xing Application Consumer Key here.',
+
+    'consumer_secret' => 'Insert your Xing Application Consumer Secret here',
+
+    /**
+     * Blacklist of client ids for the xing import feature
+     * @type Array
+     */
+    'disabled_clients' => array(),
+);
