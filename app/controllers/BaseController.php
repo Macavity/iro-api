@@ -64,8 +64,6 @@ class BaseController extends Controller {
      */
     protected $gamp = false;
 
-    protected $gampTrackingId = "UA-24950655-2";
-
     /**
      * @var Client
      */
@@ -544,7 +542,7 @@ class BaseController extends Controller {
 
         $response = $gamp->setProtocolVersion(1)
             ->setAsyncRequest(true)
-            ->setTrackingId( $this->gampTrackingId )
+            ->setTrackingId( Config::get('ga.tracking_id') )
             ->setClientId( $this->getTrackedClientId() )
             ->setUserId( $this->client->db_name )
             ->setIpOverride( $_SERVER["REMOTE_ADDR"] )
@@ -563,7 +561,7 @@ class BaseController extends Controller {
 
         $gamp->setProtocolVersion(1)
             ->setAsyncRequest(true)
-            ->setTrackingId( $this->gampTrackingId )
+            ->setTrackingId( Config::get('ga.tracking_id') )
             ->setClientId( $this->getTrackedClientId() )
             ->setUserId( $this->client->db_name )
             ->setIpOverride( $_SERVER["REMOTE_ADDR"] )
@@ -584,7 +582,7 @@ class BaseController extends Controller {
 
         $response = $gamp->setProtocolVersion(1)
             ->setAsyncRequest(true)
-            ->setTrackingId( $this->gampTrackingId )
+            ->setTrackingId( Config::get('ga.tracking_id') )
             ->setClientId( $this->getTrackedClientId() )
             ->setUserId( $this->client->db_name )
             ->setIpOverride( $_SERVER["REMOTE_ADDR"] )

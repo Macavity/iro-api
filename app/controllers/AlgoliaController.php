@@ -18,26 +18,26 @@ class AlgoliaController extends DataController {
 
     public function initSearchClient($writeAccess = false){
 
-        if($writeAccess){
-            $this->searchClient = new AlgoliaSearch\Client("52TJDTSW2T", "8a93393a5414d81d7acb2c88b663621f");
-        }
-        else {
-            $this->searchClient = new AlgoliaSearch\Client("52TJDTSW2T", "e21927dbe7c24f907731a480f4ffd68c");
-        }
-
-        // Pape
-        if($this->client->id == 2 || $this->client->id == 14){
-            $this->searchIndexName = 'pape';
-        }
-        else {
+        if(!in_array($this->client->id, Config::get('algolia.whitelist_clients'))) {
             return Response::view('error', array(), 404);
         }
+
+        if($writeAccess){
+            $this->searchClient = new AlgoliaSearch\Client(Config::get('algolia.app'), Config::get('algolia.full_access_key'));
+        }
+        else {
+            $this->searchClient = new AlgoliaSearch\Client(Config::get('algolia.app'), Config::get('algolia.read_only_key'));
+        }
+
+        // TODO Move into client settings
+        $this->searchIndexName = Config::get('algolia.search_index');
+
 
         $this->searchIndex = $this->searchClient->initIndex($this->searchIndexName);
         return true;
     }
 
-    public function jobListAll($serial){
+    public function jobListAll($serial, $sortDirection = "desc", $type = "normal"){
         $cacheId = "empty";
 
         $useCaching = false;
@@ -52,7 +52,7 @@ class AlgoliaController extends DataController {
             $this->initClient($serial);
 
             $this->initSearchClient();
-            $this->searchIndexName = 'pape_listing';
+            $this->searchIndexName = Config::get('algolia.search_index_listing');
             $this->searchIndex = $this->searchClient->initIndex($this->searchIndexName);
 
             $this->initializeFileMaker();
