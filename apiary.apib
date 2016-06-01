@@ -57,11 +57,18 @@ iRO API is a simple API allowing clients to view the data of their iRO Databases
 
 # Group Private
 
-## Jobs [/jobs]
+## Projects [/projects]
 
-### List all Jobs [GET]
+### List all Projects [GET]
 
-### Create a new Job [POST]
++ Response 201 (application/json)
+    {
+        "results": [
+            
+        ]
+    }
+
+### Create a new Project [POST]
 
 You may create a new project with this. It takes a JSON
 object containing a project.
@@ -69,13 +76,8 @@ object containing a project.
 + Request (application/json)
 
         {
-            "question": "Favourite programming language?",
-            "choices": [
-                "Swift",
-                "Python",
-                "Objective-C",
-                "Ruby"
-            ]
+            "title": "",
+            "type": ""
         }
 
 + Response 201 (application/json)
@@ -87,21 +89,15 @@ object containing a project.
     + Body
 
             {
-                "question": "Favourite programming language?",
-                "published_at": "2015-08-05T08:40:51.620Z",
-                "choices": [
-                    {
-                        "choice": "Swift",
-                        "votes": 0
-                    }, {
-                        "choice": "Python",
-                        "votes": 0
-                    }, {
-                        "choice": "Objective-C",
-                        "votes": 0
-                    }, {
-                        "choice": "Ruby",
-                        "votes": 0
-                    }
-                ]
+                "projectId": 123
             }
+
+## Bills [/bills]
+
+
+
+## Companies [/companies]
+
+## Tasks [/tasks]
+
+## Dates [/dates]
