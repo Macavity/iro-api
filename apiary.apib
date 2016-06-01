@@ -7,13 +7,16 @@ iRO API is a simple API allowing clients to view the data of their iRO Databases
 
 # Group Public Data
 
-## Public Jobs [/data/{serial}/jobs/{sort}/{type}]
+## Public Jobs [/data/{serial}/jobs/{sort}/{type}{?forceRefresh}]
 
 ### List all public jobs [GET]
 
 + Parameters
-    + serial (text) - Serial of the target database
-    + sort (text) - Sorting
+    + serial: "006D4-PPAD0-R70AA" (text) - Serial of the target database
+    + sort: "desc" (text) - Sorting
+    + type: "normal" (optional, text)
+    + forceRefresh (optional)
+        + Default: false
 
 
 + Response 200 (application/json)
