@@ -1,0 +1,107 @@
+FORMAT: 1A
+HOST: http://api.paneon.de/
+
+# iRO API
+
+iRO API is a simple API allowing clients to view the data of their iRO Databases.
+
+# Group Public Data
+
+## Public Jobs [/data/{serial}/jobs/{sort}/{type}]
+
+### List all public jobs [GET]
+
++ Parameters
+    + serial (text) - Serial of the target database
+    + sort (text) - Sorting
+
+
++ Response 200 (application/json)
+
+        {
+            "cacheActive": false,
+            "cacheId": "14-joblist-normal-desc",
+            "results": [
+                {
+                    "fm_id": "123",
+                    "visible": 1,
+                    "timestamp": 1463479812,
+                    "last_modified": "05/12/2016 14:09:18",
+                    "start_date": "2016-05-09",
+                    "position": "Bereichsleiter X (m/w)",
+                    "industry": "Elektrotechnik",
+                    "location": "Westfalen",
+                    "contact": "Max Müller",
+                    "mail": "max.mueller@mueller.de",
+                    "lang": "de",
+                    "full_text": "Aenean eu leo quam. Pellentesque ornare sem lacinia quam venenatis vestibulum. Etiam porta sem malesuada magna mollis euismod. Curabitur blandit tempus porttitor. Donec ullamcorper nulla non metus auctor fringilla.\nDuis mollis, est non commodo luctus, nisi erat porttitor ligula, eget lacinia odio sem nec elit. Nullam quis risus eget urna mollis ornare vel eu leo. Aenean lacinia bibendum nulla sed consectetur. Vestibulum id ligula porta felis euismod semper. Aenean eu leo quam. Pellentesque ornare sem lacinia quam venenatis vestibulum. Nullam id dolor id nibh ultricies vehicula ut id elit.",
+                    "rewrite_link": "123-Bereichsleiter_X_m_w_Westfalen"
+                },
+                {
+                    "fm_id": "456",
+                    "visible": 1,
+                    "timestamp": 1463479812,
+                    "last_modified": "05/12/2016 14:09:18",
+                    "start_date": "2016-05-09",
+                    "position": "Trainee (m/w)",
+                    "industry": "Elektrotechnik",
+                    "location": "München",
+                    "contact": "Max Müller",
+                    "mail": "max.mueller@mueller.de",
+                    "lang": "de",
+                    "full_text": "Aenean eu leo quam. Pellentesque ornare sem lacinia quam venenatis vestibulum. Etiam porta sem malesuada magna mollis euismod. Curabitur blandit tempus porttitor. Donec ullamcorper nulla non metus auctor fringilla.\nDuis mollis, est non commodo luctus, nisi erat porttitor ligula, eget lacinia odio sem nec elit. Nullam quis risus eget urna mollis ornare vel eu leo. Aenean lacinia bibendum nulla sed consectetur. Vestibulum id ligula porta felis euismod semper. Aenean eu leo quam. Pellentesque ornare sem lacinia quam venenatis vestibulum. Nullam id dolor id nibh ultricies vehicula ut id elit.",
+                    "rewrite_link": "123-Trainee_m_w_Muenchen"
+                }
+            ]
+        }
+
+# Group Private
+
+## Jobs [/jobs]
+
+### List all Jobs [GET]
+
+### Create a new Job [POST]
+
+You may create a new project with this. It takes a JSON
+object containing a project.
+
++ Request (application/json)
+
+        {
+            "question": "Favourite programming language?",
+            "choices": [
+                "Swift",
+                "Python",
+                "Objective-C",
+                "Ruby"
+            ]
+        }
+
++ Response 201 (application/json)
+
+    + Headers
+
+            Location: /questions/2
+
+    + Body
+
+            {
+                "question": "Favourite programming language?",
+                "published_at": "2015-08-05T08:40:51.620Z",
+                "choices": [
+                    {
+                        "choice": "Swift",
+                        "votes": 0
+                    }, {
+                        "choice": "Python",
+                        "votes": 0
+                    }, {
+                        "choice": "Objective-C",
+                        "votes": 0
+                    }, {
+                        "choice": "Ruby",
+                        "votes": 0
+                    }
+                ]
+            }
