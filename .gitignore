@@ -9,6 +9,6 @@ npm-debug.log
 database.php
 app.php
 production.request.log
-algolia.php
-ga.php
-xing.php
+app/config/algolia.php
+app/config/ga.php
+app/config/xing.php
