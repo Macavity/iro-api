@@ -1,5 +1,7 @@
 <?php
 
+use \Paneon\PaneonHelper\Paneon;
+
 /**
  * Class Job
  *
@@ -136,7 +138,7 @@ class Job extends Eloquent {
         else{
             $title = $google_title;
         }
-        $title = Paneon\PaneonHelper\Paneon::removeHTML($title);
+        $title = \Paneon\PaneonHelper\Paneon::removeHTML($title);
 
 
         //$this->log("Jobtitel:".$title);
@@ -164,7 +166,7 @@ class Job extends Eloquent {
          */
         try {
             $fmZeitstempel = $record->getField('AenderungZeitstempel');
-            $dateTime = Paneon\PaneonHelper\Paneon::fm12TimeToTimestamp($fmZeitstempel);
+            $dateTime = Paneon::fm12TimeToTimestamp($fmZeitstempel);
 
             $lastModified = $dateTime->getTimestamp();
             $lastModifiedReadable = $dateTime->format("d.m.Y H:i:s");

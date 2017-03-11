@@ -84,7 +84,7 @@ class AlgoliaController extends DataController {
                 ));
 
 
-                // Cache the joblist for 24 Hours
+                // Cache the joblist for 1 Hours
                 if($useCaching){
                     $expiresAt = Carbon::now()->addHours(1);
 
