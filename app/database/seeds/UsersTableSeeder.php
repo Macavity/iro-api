@@ -8,7 +8,7 @@ class UsersTableSeeder extends Seeder {
 		DB::table('users')->truncate();
 
         User::create(array(
-            'name' => 'Alexander Pape',
+            'name' => 'Admin',
             'email' => 'a.pape@paneon.de',
             'password' => Hash::make('awesome'),
         ));

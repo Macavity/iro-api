@@ -8,3 +8,7 @@ node_modules
 npm-debug.log
 database.php
 app.php
+production.request.log
+algolia.php
+ga.php
+xing.php

@@ -49,6 +49,11 @@ class PageController extends BaseController {
             return;
         }
 
+        if(in_array($this->client->id, array(12,14))){
+            $this->showError("Der XING-Import ist vorübergehend deaktiviert.");
+            return;
+        }
+
         $this->oAuthClient = $this->getOAuthClient();
 
         /*
@@ -66,6 +71,8 @@ class PageController extends BaseController {
             if($e->getCode() > 0){
                 $messageString = "Xing Fehler: ".$e->getCode()." ".$messageString;
             }
+
+
             Log::debug($messageString, array(
                 'serial' => $this->serialNumber,
                 'fmId' => $this->fmId,
@@ -134,7 +141,7 @@ class PageController extends BaseController {
             if(substr_count($messageString, "Unknown")
                 || substr_count($messageString, "error")
                 || substr_count($messageString, "Error")){
-                $messageString = "Es gab einen Fehler beim Speichern der Daten. Bitte achten Sie darauf dass keine anderen Benutzer oder Sie selbst in einem der Datenbankfelder aktiv sind. Der Datensatz ist sonder gesperrt und ein Import von externen Daten ist nicht möglich.";
+                $messageString = "Es gab einen Fehler beim Speichern der Daten. Bitte achten Sie darauf dass keine anderen Benutzer oder Sie selbst in einem der Datenbankfelder aktiv sind. Der Datensatz ist gesperrt und ein Import von externen Daten ist nicht möglich.";
             }
             elseif($e->getCode() > 0){
                 $messageString = "Fehler: ".$e->getCode()." ".$messageString;
@@ -155,8 +162,6 @@ class PageController extends BaseController {
             $this->showError($messageString);
             return;
         }
-
-
 
 	}
 

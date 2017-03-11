@@ -1,0 +1,5 @@
+<?php
+
+return array(
+    'tracking_id' => "Insert your Google Analytics tracking id here."
+);

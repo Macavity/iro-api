@@ -1,0 +1,11 @@
+<?php
+
+return array(
+    'app' => 'Insert your Algolia application id',
+    'full_access_key' => 'Insert a full access key for your Algolia application',
+    'read_only_key' => 'Insert a read only access key for your Algolia application',
+
+    'search_index' => 'Insert Algolia search index name',
+
+    'whitelist_clients' => array( /* Insert client ids that use this feature */)
+);
