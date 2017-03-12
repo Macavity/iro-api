@@ -127,21 +127,21 @@ Route::any('/{serial}/systemcheck', array(
 
 Route::get('/debug/fm', function(){
     include_once(base_path().'/app/libraries/filemaker-12/FileMaker.php');
-    $fm = new FileMaker('K5_RO','http://host1.kon5.net/','web_pape','xs4web_pape');
 
-    $findCommand = $fm->newFindAnyCommand('Projektliste_Web');
+    $fm = new FileMaker(Config::get('filemaker.db'), Config::get('filemaker.host'), Config::get('filemaker.username'), Config::get('filemaker.password'));
+
+    $findCommand = $fm->newFindAnyCommand(Config::get('filemaker.project_list'));
 
     $result = $findCommand->execute();
 
     $resultString = print_r($result, true);
 
-    $resultString = str_replace("xs4web_pape","****", $resultString);
-    $resultString = str_replace("web_pape","****", $resultString);
+    $resultString = str_replace(Config::get('filemaker.username'), "****", $resultString);
+    $resultString = str_replace(Config::get('filemaker.password'), "****", $resultString);
 
     echo "\n<br>getFoundSetCount:".$result->getFoundSetCount();
     echo "\n<br>getFetchCount:".$result->getFetchCount();
 
-    //\Paneon\PaneonHelper\Paneon::debug($resultString);
 });
 
 Route::get('debug/test', function(){
