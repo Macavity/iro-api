@@ -230,9 +230,9 @@ class BaseController extends Controller {
         $findCommand =& $this->fm->newFindCommand($this->fmLayout);
         $findCommand->addFindCriterion('Web_Projekt','="Archiv"');
         $findCommand->addSortRule('Start', 1, $sortDirection);
+        $findCommand->setRange(0,100);
 
         $result = $findCommand->execute();
-
         $this->fmErrorHandling($result);
 
         $records = $result->getRecords();
