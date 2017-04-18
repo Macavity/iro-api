@@ -146,6 +146,8 @@ Route::get('/debug/fm', function(){
 
 Route::get('debug/test', function(){
 
+    echo "<br>Server Name:".$_SERVER['SERVER_NAME'];
+    echo "<br>Hostname: ".gethostname();
     echo "<br>Environment: ".App::environment();
 
     $curlUrl = 'http://www.xing.de/';
