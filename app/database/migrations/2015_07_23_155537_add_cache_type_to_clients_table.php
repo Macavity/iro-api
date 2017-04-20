@@ -13,9 +13,9 @@ class AddCacheTypeToClientsTable extends Migration {
 	public function up()
 	{
         Schema::table('clients', function(Blueprint $table) {
-            $table->string('cache_type');
-            $table->integer('cache_time_detail');
-            $table->string('last_refresh');
+            $table->string('cache_type')->default('');
+            $table->integer('cache_time_detail')->default(0);
+            $table->string('last_refresh')->default(0);
         });
 	}
 
