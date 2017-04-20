@@ -9,6 +9,7 @@ class UsersTableSeeder extends Seeder {
 
         User::create(array(
             'name' => 'Admin',
+            'username' => 'Admin',
             'email' => 'a.pape@paneon.de',
             'password' => Hash::make('awesome'),
         ));

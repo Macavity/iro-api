@@ -33,7 +33,8 @@ define('PANEON_JOB_FORMAT_MARKDOWN', 2);
 define('PANEON_JOB_FORMAT_STANDARD_VALUE', 'Standard');
 define('PANEON_JOB_FORMAT_MARKDOWN_VALUE', 'Markdown');
 
-class BaseController extends Controller {
+class BaseController extends Controller
+{
 
     /**
      * @var Object
@@ -82,10 +83,11 @@ class BaseController extends Controller {
     protected $logger;
     protected $clientLogger;
 
-    public function __construct(){
+    public function __construct()
+    {
         $this->currentTimestamp = time();
 
-        $stream = new StreamHandler(storage_path().'/logs/'.App::environment().'.request.log', Logger::DEBUG);
+        $stream = new StreamHandler(storage_path() . '/logs/' . App::environment() . '.request.log', Logger::DEBUG);
         $firephp = new FirePHPHandler();
 
         // Create the main logger of the app
@@ -101,14 +103,11 @@ class BaseController extends Controller {
      */
     public function showError($message = "")
     {
-        if(empty($message))
-        {
+        if (empty($message)) {
             $this->layout->content = View::make('error')
                 ->with('fmId', $this->fmId)
                 ->with('serial', $this->serialNumber);
-        }
-        else
-        {
+        } else {
             $this->layout->content = View::make('error')
                 ->with('fmId', $this->fmId)
                 ->with('serial', $this->serialNumber)
@@ -116,9 +115,10 @@ class BaseController extends Controller {
         }
     }
 
-    private function initClientLog($clientId){
+    private function initClientLog($clientId)
+    {
 
-        $stream = new StreamHandler(storage_path().'/logs/'.App::environment().'.'.$clientId.'.log', Logger::DEBUG);
+        $stream = new StreamHandler(storage_path() . '/logs/' . App::environment() . '.' . $clientId . '.log', Logger::DEBUG);
         $firephp = new FirePHPHandler();
 
         // Create the main logger of the app
@@ -136,8 +136,7 @@ class BaseController extends Controller {
          */
         $this->client = Client::where('serial', '=', $this->serialNumber)->first();
 
-        if(!$this->client)
-        {
+        if (!$this->client) {
             $any = Client::all();
 
             print_r($any);
@@ -149,26 +148,24 @@ class BaseController extends Controller {
 
     }
 
-	/**
-	 * Setup the layout used by the controller.
-	 *
-	 * @return void
-	 */
-	protected function setupLayout()
-	{
-		if ( ! is_null($this->layout))
-		{
-			$this->layout = View::make($this->layout);
-		}
-	}
+    /**
+     * Setup the layout used by the controller.
+     *
+     * @return void
+     */
+    protected function setupLayout()
+    {
+        if (!is_null($this->layout)) {
+            $this->layout = View::make($this->layout);
+        }
+    }
 
     protected function initializeFileMaker()
     {
-        
-        $this->fm = new FileMaker($this->client->db_name, 'http://'.$this->client->host, $this->client->fm_user, $this->client->fm_password);
 
-        if(FileMaker::isError($this->fm))
-        {
+        $this->fm = new FileMaker($this->client->db_name, 'http://' . $this->client->host, $this->client->fm_user, $this->client->fm_password);
+
+        if (FileMaker::isError($this->fm)) {
             throw(new Exception("Es konnte keine Verbindung mit der iRO Datenbank hergestellt werden."));
         }
     }
@@ -187,7 +184,7 @@ class BaseController extends Controller {
         $date = strftime("%m/%d/%Y", $dateTimestamp);
 
         $findCommand =& $this->fm->newFindCommand($this->fmLayout);
-        $findCommand->addFindCriterion('AenderungsDatum', '>'.$date);
+        $findCommand->addFindCriterion('AenderungsDatum', '>' . $date);
 
         $result = $findCommand->execute();
 
@@ -198,7 +195,8 @@ class BaseController extends Controller {
         return $records;
     }
 
-    protected function log($string, $visible = false){
+    protected function log($string, $visible = false)
+    {
         $this->log[] = array(
             'text' => $string,
             'visible' => $visible,
@@ -211,10 +209,12 @@ class BaseController extends Controller {
         $this->logger->addDebug($string, $detailData);
     }
 
-    protected function getLog(){
-        if(App::environment() !== "production"){
+    protected function getLog()
+    {
+        if (App::environment() !== "production") {
             return $this->log;
         }
+        return [];
     }
 
     /**
@@ -228,9 +228,9 @@ class BaseController extends Controller {
 
         $this->fmAction = "findArchivedFileMakerJobs";
         $findCommand =& $this->fm->newFindCommand($this->fmLayout);
-        $findCommand->addFindCriterion('Web_Projekt','="Archiv"');
+        $findCommand->addFindCriterion('Web_Projekt', '="Archiv"');
         $findCommand->addSortRule('Start', 1, $sortDirection);
-        $findCommand->setRange(0,100);
+        $findCommand->setRange(0, 100);
 
         $result = $findCommand->execute();
         $this->fmErrorHandling($result);
@@ -248,7 +248,7 @@ class BaseController extends Controller {
     {
         $this->fmAction = "findHiddenFileMakerJobs";
         $findCommand =& $this->fm->newFindCommand($this->fmLayout);
-        $findCommand->addFindCriterion('Web_Projekt','="Nein"');
+        $findCommand->addFindCriterion('Web_Projekt', '="Nein"');
 
         $result = $findCommand->execute();
 
@@ -273,7 +273,7 @@ class BaseController extends Controller {
         $sortDirection = ($sortDirection == "asc") ? FILEMAKER_SORT_ASCEND : FILEMAKER_SORT_DESCEND;
         $this->fmAction = "findPublicFileMakerJobs";
         $findCommand =& $this->fm->newFindCommand($this->fmLayout);
-        $findCommand->addFindCriterion('Web_Projekt','="Ja"');
+        $findCommand->addFindCriterion('Web_Projekt', '="Ja"');
         $findCommand->addSortRule('Start', 1, $sortDirection);
 
 
@@ -284,8 +284,7 @@ class BaseController extends Controller {
             $records = $result->getRecords();
 
             return $records;
-        }
-        catch(Exception $e){
+        } catch (Exception $e) {
             throw(new Exception($e->getMessage(), $e->getCode()));
         }
 
@@ -298,25 +297,25 @@ class BaseController extends Controller {
      */
     protected function findModifiedJobs($lastModified)
     {
-        $this->log("findModifiedPublicJobs ".$lastModified);
+        $this->log("findModifiedPublicJobs " . $lastModified);
         $findCommand =& $this->fm->newFindCommand($this->fmLayout);
         // Have to find all jobs because there might be those that were previously public but aren't now
         //$findCommand->addFindCriterion('Web_Projekt','="Ja"');
 
         $lastModified = strftime("%m/%d/%Y 00:00:00", $lastModified);
 
-        $findCommand->addFindCriterion('AenderungZeitstempel', '>'.$lastModified);
+        $findCommand->addFindCriterion('AenderungZeitstempel', '>' . $lastModified);
         $findCommand->addSortRule('AenderungZeitstempel', 1, FILEMAKER_SORT_ASCEND);
 
         try {
             $result = $findCommand->execute();
-            if(!$this->fmErrorHandling($result)){
+            if (!$this->fmErrorHandling($result)) {
                 throw(new Exception("Kein Datensatz gefunden.", 101));
             }
 
             $records = $result->getRecords();
 
-            foreach($records as $record){
+            foreach ($records as $record) {
                 $dateTime = Paneon\PaneonHelper\Paneon::fm12TimeToTimestamp($record->getField('AenderungZeitstempel'));
                 //echo "\n<br>".'Job: '.$record->getField('ID').' - '.$dateTime->format("d.m.Y H:m:s");
 
@@ -325,8 +324,7 @@ class BaseController extends Controller {
             //die();
 
             return $records;
-        }
-        catch(Exception $e){
+        } catch (Exception $e) {
             throw(new Exception($e->getMessage(), $e->getCode()));
         }
 
@@ -334,12 +332,12 @@ class BaseController extends Controller {
 
     protected function findFileMakerRecordById($fmId)
     {
-        $this->log("findFileMakerRecordById: ".$fmId);
-        $this->log("Layout: ".$this->fmLayout);
+        $this->log("findFileMakerRecordById: " . $fmId);
+        $this->log("Layout: " . $this->fmLayout);
 
         $findCommand =& $this->fm->newFindCommand($this->fmLayout);
 
-        $findCommand->addFindCriterion('ID','="'.$fmId.'"');
+        $findCommand->addFindCriterion('ID', '="' . $fmId . '"');
 
         $result = $findCommand->execute();
         $this->fmErrorHandling($result);
@@ -348,14 +346,13 @@ class BaseController extends Controller {
         $this->fmErrorHandling($record);
 
         $this->fmRecordId = $record->getRecordId();
-        try{
+        try {
             $this->fmId = $record->getField('ID');
 
             $xingLink = trim($record->getField('XING'));
 
             $this->fmXingLink = (empty($xingLink)) ? "" : $xingLink;
-        }
-        catch(Exception $e){
+        } catch (Exception $e) {
             throw(new Exception($e->getMessage(), $e->getCode()));
         }
 
@@ -368,14 +365,15 @@ class BaseController extends Controller {
      * @return FileMaker_Record
      * @throws Exception
      */
-    protected function findFileMakerJobById($jobId, $type = "open"){
+    protected function findFileMakerJobById($jobId, $type = "open")
+    {
         //$this->log("findFileMakerJobById: ".$jobId);
 
         $findCommand =& $this->fm->newFindCommand($this->fmLayout);
-        if($type == "open"){
-            $findCommand->addFindCriterion('Web_Projekt','="Ja"');
+        if ($type == "open") {
+            $findCommand->addFindCriterion('Web_Projekt', '="Ja"');
         }
-        $findCommand->addFindCriterion('ID','="'.$jobId.'"');
+        $findCommand->addFindCriterion('ID', '="' . $jobId . '"');
 
         $result = $findCommand->execute();
         $this->fmErrorHandling($result);
@@ -384,14 +382,13 @@ class BaseController extends Controller {
         $this->fmErrorHandling($record);
 
         $this->fmRecordId = $record->getRecordId();
-        try{
+        try {
             $this->fmId = $record->getField('ID');
 
             $xingLink = trim($record->getField('XING'));
 
             $this->fmXingLink = (empty($xingLink)) ? "" : $xingLink;
-        }
-        catch(Exception $e){
+        } catch (Exception $e) {
             throw(new Exception($e->getMessage(), $e->getCode()));
         }
 
@@ -419,7 +416,7 @@ class BaseController extends Controller {
         $this->fmAction = "findExternalFileMakerJobs";
         $findCommand =& $this->fm->newFindCommand($this->fmLayout);
 
-        $findCommand->addFindCriterion('Web Export','="Ja"');
+        $findCommand->addFindCriterion('Web Export', '="Ja"');
 
         $result = $findCommand->execute();
 
@@ -455,8 +452,7 @@ class BaseController extends Controller {
      */
     protected function fmErrorHandling($error)
     {
-        if(FileMaker::isError($error))
-        {
+        if (FileMaker::isError($error)) {
             /**
              * @var FileMaker_Error $error
              */
@@ -465,7 +461,7 @@ class BaseController extends Controller {
             $code = $error->getCode();
             $backtrace = $error->getBacktrace();
 
-            switch($code){
+            switch ($code) {
                 case 101:
                     $message = "Datensatz wurde nicht gefunden";
                     break;
@@ -480,7 +476,7 @@ class BaseController extends Controller {
                     break;
             }
 
-            switch($message){
+            switch ($message) {
                 case 'Field Not Found':
                     $message = "Feld fehlt in Layout, bitte kontaktieren Sie den Heads2Hunt Support wegen dieses Fehlers.";
                     break;
@@ -514,114 +510,116 @@ class BaseController extends Controller {
         //$oAuthClient->access_token
         //$oAuthClient->token
 
-        if(empty($redirectUrl)){
+        if (empty($redirectUrl)) {
             $oAuthClient->redirect_uri = route('form', array(
                 'serial' => $this->serialNumber,
                 'fmId' => $this->fmRecordId
             ));
-        }
-        else {
+        } else {
             $oAuthClient->redirect_uri = $redirectUrl;
         }
 
         $oAuthClient->client_id = Config::get('xing.consumer_key');
         $oAuthClient->client_secret = Config::get('xing.consumer_secret');
 
-        if(empty($oAuthClient->client_id) || empty($oAuthClient->client_secret))
-        {
-            die('Please go to XING My Apps page https://dev.xing.com/applications , '.
-                'create an application, and in the line 22'.
+        if (empty($oAuthClient->client_id) || empty($oAuthClient->client_secret)) {
+            die('Please go to XING My Apps page https://dev.xing.com/applications , ' .
+                'create an application, and in the line 22' .
                 ' set the client_id to Consumer key and client_secret with Consumer secret.');
         }
 
         return $oAuthClient;
     }
 
-    protected function trackJoblistAction($action){
+    protected function trackJoblistAction($action)
+    {
         $gamp = new Analytics();
 
         $response = $gamp->setProtocolVersion(1)
             ->setAsyncRequest(true)
-            ->setTrackingId( Config::get('ga.tracking_id') )
-            ->setClientId( $this->getTrackedClientId() )
-            ->setUserId( $this->client->db_name )
-            ->setIpOverride( $_SERVER["REMOTE_ADDR"] )
+            ->setTrackingId(Config::get('ga.tracking_id'))
+            ->setClientId($this->getTrackedClientId())
+            ->setUserId($this->client->db_name)
+            ->setIpOverride($_SERVER["REMOTE_ADDR"])
             ->setDocumentHostName($_SERVER['HTTP_HOST'])
             // Page Hit
-            ->setDocumentPath( '/'.$this->client->id.'/' )
+            ->setDocumentPath('/' . $this->client->id . '/')
             // Event
             ->setEventCategory("joblist")
-            ->setEventAction( $action )
+            ->setEventAction($action)
             ->sendEvent();
     }
 
-    protected function trackPageHit($url){
+    protected function trackPageHit($url)
+    {
 
         $gamp = new Analytics();
 
         $gamp->setProtocolVersion(1)
             ->setAsyncRequest(true)
-            ->setTrackingId( Config::get('ga.tracking_id') )
-            ->setClientId( $this->getTrackedClientId() )
-            ->setUserId( $this->client->db_name )
-            ->setIpOverride( $_SERVER["REMOTE_ADDR"] )
+            ->setTrackingId(Config::get('ga.tracking_id'))
+            ->setClientId($this->getTrackedClientId())
+            ->setUserId($this->client->db_name)
+            ->setIpOverride($_SERVER["REMOTE_ADDR"])
             ->setDocumentHostName($_SERVER['HTTP_HOST'])
             // Page Hit
-            ->setDocumentPath( '/'.$this->client->id.$url );
+            ->setDocumentPath('/' . $this->client->id . $url);
         $response = $gamp->sendPageview();
-
 
 
         //Paneon\PaneonHelper\Paneon::debug("gamp",$response);
 
     }
 
-    protected function trackEvent($category, $action){
+    protected function trackEvent($category, $action)
+    {
 
         $gamp = new Analytics();
 
         $response = $gamp->setProtocolVersion(1)
             ->setAsyncRequest(true)
-            ->setTrackingId( Config::get('ga.tracking_id') )
-            ->setClientId( $this->getTrackedClientId() )
-            ->setUserId( $this->client->db_name )
-            ->setIpOverride( $_SERVER["REMOTE_ADDR"] )
+            ->setTrackingId(Config::get('ga.tracking_id'))
+            ->setClientId($this->getTrackedClientId())
+            ->setUserId($this->client->db_name)
+            ->setIpOverride($_SERVER["REMOTE_ADDR"])
             ->setDocumentHostName($_SERVER['HTTP_HOST'])
             // Page Hit
-            ->setDocumentPath( '/'.$this->client->id.'/' )
+            ->setDocumentPath('/' . $this->client->id . '/')
             // Event
-            ->setEventCategory( $category )
-            ->setEventAction( $action )
+            ->setEventCategory($category)
+            ->setEventAction($action)
             ->sendEvent();
         //Paneon\PaneonHelper\Paneon::debug("gamp",$response);
     }
 
     // Handle the parsing of the _ga cookie or setting it to a unique identifier
-    protected function getTrackedClientId() {
+    protected function getTrackedClientId()
+    {
         /*if (isset($_COOKIE['_ga'])) {
             list($version,$domainDepth, $cid1, $cid2) = preg_split('[\.]', $_COOKIE["_ga"],4);
             $contents = array('version' => $version, 'domainDepth' => $domainDepth, 'cid' => $cid1.'.'.$cid2);
             $cid = $contents['cid'];
         }
         else {*/
-            $cid = $this->client->serial;
+        $cid = $this->client->serial;
         //}
         return $cid;
     }
 
-    protected function initLog() {
-        if(!file_exists('log')) {
+    protected function initLog()
+    {
+        if (!file_exists('log')) {
             mkdir('log', 0775, true);
         }
 
 
-        $this->logFile = PATH_PROJECT.'/log/'.strftime("%Y-%m-%d").".export";
+        $this->logFile = PATH_PROJECT . '/log/' . strftime("%Y-%m-%d") . ".export";
 
-        if($this->devImport){
+        if ($this->devImport) {
             $this->logFile .= ".dev";
         }
 
-        if($this->testRun){
+        if ($this->testRun) {
             $this->logFile .= ".test";
         }
 
@@ -629,7 +627,8 @@ class BaseController extends Controller {
 
     }
 
-    public function removeHTML($text){
+    public function removeHTML($text)
+    {
 
         // FM 12 liefert decodierte Entities
         $text = html_entity_decode($text);

@@ -35,6 +35,7 @@ $env = $app->detectEnvironment(function(){
         'localhost',
         'Alexanders-MBP.fritz.box',
         'pc-w7-124.portalmuc.local',
+        'MacBookAlexPape.fritz.box',
     );
 
     if($server_name == 'api-dev.paneon.de'){
