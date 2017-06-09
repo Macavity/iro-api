@@ -1,17 +1,16 @@
 <?php
 
-require_once(base_path().'/app/libraries/Paneon/PaneonHelper/Paneon.php');
-require_once(base_path().'/app/macros.php');
+require_once(base_path() . '/app/libraries/Paneon/PaneonHelper/Paneon.php');
+require_once(base_path() . '/app/macros.php');
 
-use Paneon\PaneonHelper;
-
-class DataController extends BaseController {
+class DataController extends BaseController
+{
 
     protected $serialNumber;
 
     protected $log;
 
-    public function jobListAll($serial, $sortDirection = "desc", $type = "normal")
+    public function jobListAll ($serial, $sortDirection = "desc", $type = "normal")
     {
         $cacheId = "empty";
         $cacheActive = false;
@@ -22,11 +21,11 @@ class DataController extends BaseController {
 
 
         // Alter Wert
-        if($sortDirection == "all"){
+        if ($sortDirection == "all") {
             $sortDirection = "desc";
         }
 
-        if($sortDirection != "desc"){
+        if ($sortDirection != "desc") {
             // Default
             $sortDirection = "asc";
         }
@@ -39,37 +38,33 @@ class DataController extends BaseController {
 
             //$findCommand =& $this->fm->newFindCommand('Projektliste_Web');
 
-            if($type == "archiv"){
-                $cacheId = $this->client->id."-joblist-archiv-".$sortDirection;
-            }
-            else {
-                $cacheId = $this->client->id."-joblist-normal-".$sortDirection;
+            if ($type == "archiv") {
+                $cacheId = $this->client->id . "-joblist-archiv-" . $sortDirection;
+            } else {
+                $cacheId = $this->client->id . "-joblist-normal-" . $sortDirection;
             }
 
-            if($useCaching && Cache::has($cacheId) && $cacheForceRefresh == false){
+            if ($useCaching && Cache::has($cacheId) && $cacheForceRefresh == false) {
                 $jobList = Cache::get($cacheId);
                 $cacheActive = true;
                 $this->log("Cache active");
 
-                $this->trackPageHit('/jobs/'.$sortDirection.'/'.$type.'/Cached');
+                $this->trackPageHit('/jobs/' . $sortDirection . '/' . $type . '/Cached');
                 $this->trackEvent('joblist', 'cached call');
 
-            }
-            else {
-                if($cacheForceRefresh){
+            } else {
+                if ($cacheForceRefresh) {
                     $this->trackEvent('joblist', 'forced refresh');
-                    $this->trackPageHit('/jobs/'.$sortDirection.'/'.$type.'/forcedRefresh');
-                }
-                else {
+                    $this->trackPageHit('/jobs/' . $sortDirection . '/' . $type . '/forcedRefresh');
+                } else {
                     $this->trackEvent('joblist', 'normal refresh');
-                    $this->trackPageHit('/jobs/'.$sortDirection.'/'.$type.'/Fresh');
+                    $this->trackPageHit('/jobs/' . $sortDirection . '/' . $type . '/Fresh');
                 }
 
-                if($type == "archiv"){
+                if ($type == "archiv") {
                     $this->log("find Archived Jobs");
                     $records = $this->findArchivedFileMakerJobs($sortDirection);
-                }
-                else {
+                } else {
                     $this->log("find Public Jobs");
                     $records = $this->findPublicFileMakerJobs($sortDirection);
 
@@ -78,7 +73,7 @@ class DataController extends BaseController {
                 $jobList = array();
                 $this->log("Foreach records");
 
-                foreach($records as $record){
+                foreach ($records as $record) {
 
                     /** @var $record FileMaker_Record */
 
@@ -87,14 +82,13 @@ class DataController extends BaseController {
 
                     //$this->log("Job ID:".$jobId);
 
-                    if($jobId != intval($record->getField('ID')) || empty($jobId) || $jobId <= 0){
+                    if ($jobId != intval($record->getField('ID')) || empty($jobId) || $jobId <= 0) {
                         continue;
                     }
 
                     $startDate = $record->getField("Start");
 
-                    if(!empty($startDate))
-                    {
+                    if (!empty($startDate)) {
                         $startDate = $this->formatDate($startDate);
                     }
 
@@ -115,11 +109,11 @@ class DataController extends BaseController {
 
                     $searchText = $record->getField("Web_Volltext");
 
-                    $rewriteLink = $position_name.'-'.$city;
+                    $rewriteLink = $position_name . '-' . $city;
                     //$rewriteLink = iconv("UTF-8", "ASCII//TRANSLIT", $rewriteLink);
                     $rewriteLink = str_replace(
-                        array('ä', 'ö', 'ü', 'ß','Ä','Ö','Ü'),
-                        array('ae', 'oe', 'ue', 'ss','Ae', 'Oe', 'Ue'), $rewriteLink);
+                        array('ä', 'ö', 'ü', 'ß', 'Ä', 'Ö', 'Ü'),
+                        array('ae', 'oe', 'ue', 'ss', 'Ae', 'Oe', 'Ue'), $rewriteLink);
                     $rewriteLink = preg_replace('/[^A-z0-9]+/', "_", $rewriteLink);
 
                     $rewriteLink = preg_replace("/_+/", "_", $rewriteLink);
@@ -127,16 +121,15 @@ class DataController extends BaseController {
                     //remove all underscores at the beginning and end
                     $rewriteLink = trim($rewriteLink, "_");
 
-                    $rewriteLink = $jobId.'-'.$rewriteLink;
+                    $rewriteLink = $jobId . '-' . $rewriteLink;
 
                     $google_title = $record->getField('Google Titel');
                     $google_desc = $record->getField('Google Beschreibung');
 
 
-                    if(empty($google_title)){
-                        $title = $city.' Jobs - '.$position_name;
-                    }
-                    else{
+                    if (empty($google_title)) {
+                        $title = $city . ' Jobs - ' . $position_name;
+                    } else {
                         $title = $google_title;
                     }
                     $title = $this->removeHTML($title);
@@ -149,7 +142,7 @@ class DataController extends BaseController {
                      */
                     $webProject = $record->getField('Web_Projekt');
 
-                    switch($webProject){
+                    switch ($webProject) {
                         case 'Ja':
                             $visible = PANEON_JOB_TYPE_NORMAL;
                             break;
@@ -162,17 +155,17 @@ class DataController extends BaseController {
                     //Paneon::debug("Sichtbarkeit:", $visible);
 
                     $row = array(
-                        'fm_id'     => $jobId,
-                        'visible'   => $visible,
+                        'fm_id' => $jobId,
+                        'visible' => $visible,
                         'timestamp' => $this->currentTimestamp,
                         'last_modified' => $record->getField('AenderungZeitstempel'),
                         'start_date' => $startDate,
-                        'position'  => $position_name,
-                        'industry'  => $branche,
-                        'location'  => $city,
-                        'contact'   => $web_berater,
-                        'mail'      => $web_berater_email,
-                        'lang'      => ($language == 'Englisch' || strstr($language,"en") ) ? 'en' : 'de',
+                        'position' => $position_name,
+                        'industry' => $branche,
+                        'location' => $city,
+                        'contact' => $web_berater,
+                        'mail' => $web_berater_email,
+                        'lang' => ($language == 'Englisch' || strstr($language, "en")) ? 'en' : 'de',
                         "full_text" => $searchText,
                         'rewrite_link' => $rewriteLink,
                         /*
@@ -206,8 +199,7 @@ class DataController extends BaseController {
                 'results' => $jobList,
                 'log' => $this->getLog(),
             ));
-        }
-        catch(Exception $e){
+        } catch (Exception $e) {
 
             return Response::json(array(
                 'error' => $e->getMessage(),
@@ -222,12 +214,14 @@ class DataController extends BaseController {
 
     }
 
-    public function externalJobList($serial, $format = "json")
+    public function externalJobList ($serial, $format = "json")
     {
         $cacheId = "empty";
         $cacheActive = false;
 
         $cacheForceRefresh = (Input::get('forceRefresh') == 1);
+
+        $customizedDetailLinks = Config::get('iro.job_url_base');
 
         try {
 
@@ -237,19 +231,17 @@ class DataController extends BaseController {
 
             $cacheId = $this->client->id . "-external-" . $format;
 
-            $this->trackPageHit('/jobs/external/'.$format);
+            $this->trackPageHit('/jobs/external/' . $format);
 
             if (Cache::has($cacheId) && $cacheForceRefresh == false) {
                 $jobList = Cache::get($cacheId);
                 $cacheActive = true;
-                $this->trackEvent('joblist_extern_'.$format, 'cached call');
-            }
-            else {
-                if($cacheForceRefresh){
-                    $this->trackEvent('joblist_extern_'.$format, 'forced refresh');
-                }
-                else {
-                    $this->trackEvent('joblist_extern_'.$format, 'normal refresh');
+                $this->trackEvent('joblist_extern_' . $format, 'cached call');
+            } else {
+                if ($cacheForceRefresh) {
+                    $this->trackEvent('joblist_extern_' . $format, 'forced refresh');
+                } else {
+                    $this->trackEvent('joblist_extern_' . $format, 'normal refresh');
                 }
                 $records = $this->findExternalFileMakerJobs();
 
@@ -320,10 +312,7 @@ class DataController extends BaseController {
                         $title = $google_title;
                     }
                     $title = $this->removeHTML($title);
-
-
-                    //Paneon::debug("Jobtitel:", $title);
-
+                    
                     /*
                      * Sichtbarkeit des Datensatzes
                      */
@@ -339,7 +328,10 @@ class DataController extends BaseController {
                         default:
                             $visible = PANEON_JOB_TYPE_HIDDEN;
                     }
-                    //Paneon::debug("Sichtbarkeit:", $visible);
+
+                    if (in_array($this->client->id, array_keys($customizedDetailLinks))) {
+                        $detailslink = $customizedDetailLinks[$this->client->id] . $jobId;
+                    }
 
                     /*
                      * Format for jobs.ch
@@ -348,66 +340,63 @@ class DataController extends BaseController {
 
                         $intro = nl2br(trim($intro));
                         $position = nl2br(trim($position));
-                        $jobDescription = $position;
+                        $jobId = trim($jobId);
 
-                        if ($this->client->name == "iRO Stocker") {
-                            /*
-                             *  Intro
-                             */
-                            $intro = str_replace("<br>", "<br />", $intro);
-                            $intro = str_replace("<br/>", "<br />", $intro);
+                        /*
+                         *  Intro
+                         */
+                        $intro = str_replace("<br>", "<br />", $intro);
+                        $intro = str_replace("<br/>", "<br />", $intro);
 
-                            $introLines = explode("<br />", $intro);
+                        $introLines = explode("<br />", $intro);
 
-                            $intro = '<h2>' . $introLines[0] . '</h2>';
-                            for ($i = 1; count($introLines) > $i; $i++) {
+                        $intro = '<h2>' . $introLines[0] . '</h2>';
+                        for ($i = 1; count($introLines) > $i; $i++) {
 
-                                $intro .= "\n" . $introLines[$i];
-                                if (count($introLines) > ($i + 1)) {
-                                    $intro .= '<br />';
-                                }
+                            $intro .= "\n" . $introLines[$i];
+                            if (count($introLines) > ($i + 1)) {
+                                $intro .= '<br />';
                             }
+                        }
 
-                            /*
-                             *  Job Description
-                             */
-                            $jobDescription = "";
+                        /*
+                         *  Job Description
+                         */
+                        $jobDescription = "";
 
-                            $positionLines = explode("<br />", $position);
+                        $positionLines = explode("<br />", $position);
 
-                            if (count($positionLines) > 0) {
-                                $jobDescription .= '<b>Ihre Aufgaben:</b><br />' . "\n" . '<ul>';
-                                foreach ($positionLines as $line) {
-                                    $jobDescription .= "\n" . '<li>' . $line . '</li>';
-                                }
-                                $jobDescription .= '</ul>';
+                        if (count($positionLines) > 0) {
+                            $jobDescription .= '<b>Ihre Aufgaben:</b><br />' . "\n" . '<ul>';
+                            foreach ($positionLines as $line) {
+                                $jobDescription .= "\n" . '<li>' . $line . '</li>';
                             }
+                            $jobDescription .= '</ul>';
+                        }
 
-                            $candidateLines = explode("<br>", $candidate);
+                        $candidateLines = explode("<br>", $candidate);
 
-                            if (count($candidateLines) > 0) {
-                                $jobDescription .= '<b>Ihr Profil:</b><br /><ul>';
-                                foreach ($candidateLines as $line) {
-                                    $jobDescription .= '<li>' . $line . '</li>';
-                                }
-                                $jobDescription .= '</ul>';
+                        if (count($candidateLines) > 0) {
+                            $jobDescription .= '<b>Ihr Profil:</b><br /><ul>';
+                            foreach ($candidateLines as $line) {
+                                $jobDescription .= '<li>' . $line . '</li>';
                             }
+                            $jobDescription .= '</ul>';
+                        }
 
-                            $resumeLines = explode("<br>", $resume);
+                        $resumeLines = explode("<br>", $resume);
 
-                            if (count($resumeLines) > 0) {
-                                $jobDescription .= '<b>Ihre Perspektiven:</b><br><ul>';
-                                foreach ($resumeLines as $line) {
-                                    $jobDescription .= '<li>' . $line . '</li>';
-                                }
-                                $jobDescription .= '</ul>';
+                        if (count($resumeLines) > 0) {
+                            $jobDescription .= '<b>Ihre Perspektiven:</b><br><ul>';
+                            foreach ($resumeLines as $line) {
+                                $jobDescription .= '<li>' . $line . '</li>';
                             }
-
+                            $jobDescription .= '</ul>';
                         }
 
                         $row = array(
                             'ORGANISATIONID' => $this->client->getJobsChId(),
-                            'INSERATID' => trim($jobId),
+                            'INSERATID' => $jobId,
                             'VORSPANN' => $this->sanitizeForXML($intro),
                             'BERUF' => $this->sanitizeForXML(nl2br(trim($title))),
                             'TEXT' => $this->sanitizeForXML($jobDescription),
@@ -415,7 +404,7 @@ class DataController extends BaseController {
                             'ORT' => $this->sanitizeForXML(nl2br(trim($city))),
                             'KONTAKT' => $this->sanitizeForXML(nl2br(trim($web_berater))),
                             'EMAIL' => $this->sanitizeForXML(nl2br(trim($web_berater_email))),
-                            'DIREKT_URL' => 'http://www.stocker-hrc.ch/de/ihre-karriere/stellenangebote/detail-stellenangebot/?tx_cfvacancy_job[jobId]=' . trim($jobId),
+                            'DIREKT_URL' => $detailslink,
                         );
 
                     } else {
@@ -498,8 +487,7 @@ class DataController extends BaseController {
             }
 
             return $response;
-        }
-        catch(Exception $e){
+        } catch (Exception $e) {
             return Response::json(array(
                 'error' => $e->getMessage(),
                 'code' => $e->getCode(),
@@ -512,13 +500,13 @@ class DataController extends BaseController {
 
     }
 
-    public function jobList($serial, $start, $count)
+    public function jobList ($serial, $start, $count)
     {
         $this->initClient($serial);
 
     }
 
-    public function jobDetailFallback($serial, $jobId)
+    public function jobDetailFallback ($serial, $jobId)
     {
         $this->initClient($serial);
         //$this->log("Client {$this->client->id}, job_id {$jobId}");
@@ -530,10 +518,9 @@ class DataController extends BaseController {
 
         //$this->log("JobMirror ".$jobMirror->id.": Client {$jobMirror->client}, job_id {$jobMirror->job_id}");
 
-        try
-        {
+        try {
 
-            $this->trackPageHit('/data/job-detail/'.$jobId);
+            $this->trackPageHit('/data/job-detail/' . $jobId);
 
             $this->trackEvent('job-detail', $jobId);
 
@@ -556,10 +543,8 @@ class DataController extends BaseController {
                 'log' => $this->getLog(),
             ));
 
-        }
-        catch(Exception $e)
-        {
-            if($jobMirror){
+        } catch (Exception $e) {
+            if ($jobMirror) {
                 //$this->log("Fallback version");
 
                 return Response::json(array(
@@ -592,14 +577,14 @@ class DataController extends BaseController {
      * @param $jobId
      * @return \Illuminate\Http\JsonResponse
      */
-    public function jobDetailCheck($serial, $jobId)
+    public function jobDetailCheck ($serial, $jobId)
     {
         try {
             $this->initClient($serial);
 
             $this->initializeFileMaker();
 
-            $this->trackPageHit('/data/job-detail/'.$jobId);
+            $this->trackPageHit('/data/job-detail/' . $jobId);
 
             $this->trackEvent('job-detail', $jobId);
 
@@ -608,15 +593,14 @@ class DataController extends BaseController {
             /** @var $jobId int */
             $jobId = $record->getField('ID');
 
-            if($jobId != intval($record->getField('ID')) || empty($jobId) || $jobId <= 0){
+            if ($jobId != intval($record->getField('ID')) || empty($jobId) || $jobId <= 0) {
                 //Paneon::debug("Überspringe wegen ungültiger JobId: JobId ".$record->getField('ID').", ProjektName: ".$record->getField('ProjektName'));
                 throw(new Exception("Kein Datensatz gefunden."));
             }
 
             $startDate = $record->getField("Start");
 
-            if(!empty($startDate))
-            {
+            if (!empty($startDate)) {
                 $startDate = $this->formatDate($startDate);
             }
 
@@ -625,7 +609,7 @@ class DataController extends BaseController {
              */
             $webFormat = $record->getField('Web_Format');
 
-            switch($webFormat){
+            switch ($webFormat) {
                 case PANEON_JOB_FORMAT_MARKDOWN_VALUE:
                     $webFormat = PANEON_JOB_FORMAT_MARKDOWN;
                     break;
@@ -652,11 +636,11 @@ class DataController extends BaseController {
 
             $searchText = $record->getField("Web_Volltext");
 
-            $rewriteLink = $position_name.'-'.$city;
+            $rewriteLink = $position_name . '-' . $city;
             //$rewriteLink = iconv("UTF-8", "ASCII//TRANSLIT", $rewriteLink);
             $rewriteLink = str_replace(
-                array('ä', 'ö', 'ü', 'ß','Ä','Ö','Ü'),
-                array('ae', 'oe', 'ue', 'ss','Ae', 'Oe', 'Ue'), $rewriteLink);
+                array('ä', 'ö', 'ü', 'ß', 'Ä', 'Ö', 'Ü'),
+                array('ae', 'oe', 'ue', 'ss', 'Ae', 'Oe', 'Ue'), $rewriteLink);
             $rewriteLink = preg_replace('/[^A-z0-9]+/', "_", $rewriteLink);
 
             $rewriteLink = preg_replace("/_+/", "_", $rewriteLink);
@@ -664,16 +648,15 @@ class DataController extends BaseController {
             //remove all underscores at the beginning and end
             $rewriteLink = trim($rewriteLink, "_");
 
-            $rewriteLink = $jobId.'-'.$rewriteLink;
+            $rewriteLink = $jobId . '-' . $rewriteLink;
 
             $google_title = $record->getField('Google Titel');
             $google_desc = $record->getField('Google Beschreibung');
 
 
-            if(empty($google_title)){
-                $title = $city.' Jobs - '.$position_name;
-            }
-            else{
+            if (empty($google_title)) {
+                $title = $city . ' Jobs - ' . $position_name;
+            } else {
                 $title = $google_title;
             }
             $title = $this->removeHTML($title);
@@ -686,7 +669,7 @@ class DataController extends BaseController {
              */
             $webProject = $record->getField('Web_Projekt');
 
-            switch($webProject){
+            switch ($webProject) {
                 case 'Ja':
                     $visible = PANEON_JOB_TYPE_NORMAL;
                     break;
@@ -697,23 +680,23 @@ class DataController extends BaseController {
                     $visible = PANEON_JOB_TYPE_HIDDEN;
             }
 
-            if($visible == PANEON_JOB_TYPE_HIDDEN){
+            if ($visible == PANEON_JOB_TYPE_HIDDEN) {
                 // Only return data to visible or archived projects
                 throw(new Exception("Kein Datensatz gefunden."));
             }
 
             $jobRow = array(
-                'fm_id'     => $jobId,
-                'visible'   => $visible,
+                'fm_id' => $jobId,
+                'visible' => $visible,
                 'timestamp' => $this->currentTimestamp,
                 'formatter' => $webFormat,
                 'start_date' => $startDate,
-                'position'  => $position_name,
-                'industry'  => $branche,
-                'location'  => $city,
-                'contact'   => $web_berater,
-                'contact_mail'      => $web_berater_email,
-                'lang'      => ($language == 'Englisch' || strstr($language,"en") ) ? 'en' : 'de',
+                'position' => $position_name,
+                'industry' => $branche,
+                'location' => $city,
+                'contact' => $web_berater,
+                'contact_mail' => $web_berater_email,
+                'lang' => ($language == 'Englisch' || strstr($language, "en")) ? 'en' : 'de',
                 "full_text" => $searchText,
                 'rewrite_link' => $rewriteLink,
 
@@ -734,8 +717,7 @@ class DataController extends BaseController {
                 'result' => $jobRow,
             ));
 
-        }
-        catch(Exception $e){
+        } catch (Exception $e) {
             return Response::json(array(
                 'error' => $e->getMessage(),
                 'code' => $e->getCode(),
@@ -743,13 +725,11 @@ class DataController extends BaseController {
         }
 
 
-
-
     }
 
-    private function formatDate($date)
+    private function formatDate ($date)
     {
-        if(substr_count($date, "/") > 0){
+        if (substr_count($date, "/") > 0) {
             $date = explode("/", $date);
             /*
              *                   0    1   2
@@ -758,9 +738,8 @@ class DataController extends BaseController {
              *                   2    0   1
              * Ausgangsformat: Jahr-Monat-Tag
              */
-            $date = $date[2]."-".$date[0]."-".$date[1];
-        }
-        elseif(substr_count($date, ".") > 0){
+            $date = $date[2] . "-" . $date[0] . "-" . $date[1];
+        } elseif (substr_count($date, ".") > 0) {
             $date = explode(".", $date);
             /*
              *                    0   1    2
@@ -769,26 +748,30 @@ class DataController extends BaseController {
              *                   2    0    1
              * Ausgangsformat: Jahr-Monat-Tag
              */
-            $date = $date[2]."-".$date[0]."-".$date[1];
+            $date = $date[2] . "-" . $date[0] . "-" . $date[1];
         }
         return $date;
     }
 
-    private function formatIntro($text){
-        if($this->client->name == "iRO Stocker"){}
+    private function formatIntro ($text)
+    {
+        if ($this->client->name == "iRO Stocker") {
+        }
         return $text;
     }
 
-    private function formatJobDescription($text){
-        if($this->client->name == "iRO Stocker"){
+    private function formatJobDescription ($text)
+    {
+        if ($this->client->name == "iRO Stocker") {
 
         }
         return $text;
     }
 
-    private function sanitizeForXML($text){
+    private function sanitizeForXML ($text)
+    {
         return str_replace(
-            array('&',     "'",      '<',    '>',    '"',      'Ä',      'Ö',      'Ü',      'ä',      'ö',      'ü',      'ß'),
+            array('&', "'", '<', '>', '"', 'Ä', 'Ö', 'Ü', 'ä', 'ö', 'ü', 'ß'),
             array('&amp;', '&apos;', '&lt;', '&gt;', '&quot;', '&#196;', '&#214;', '&#220;', '&#228;', '&#246;', '&#252;', '&#223;'),
             $text
         );

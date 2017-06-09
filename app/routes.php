@@ -89,6 +89,10 @@ Route::group(array('prefix' => 'search'), function()
     Route::get('{serial}/check-cache/single/{jobId}', 'AlgoliaController@singleRefresh')
         ->where('serial', '[A-Za-z\-\d+]+')
         ->where('jobId', '[\d]+');
+    
+    // Clean index and full refresh
+    Route::get('{serial}/clean-import', 'AlgoliaController@cleanImport')
+        ->where('serial', '[A-Za-z\-\d+]+');
 });
 
 

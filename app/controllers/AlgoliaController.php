@@ -34,6 +34,7 @@ class AlgoliaController extends DataController {
 
 
         $this->searchIndex = $this->searchClient->initIndex($this->searchIndexName);
+
         return true;
     }
 
@@ -127,7 +128,16 @@ class AlgoliaController extends DataController {
         else {
             return $this->checkCache($serial, "open");
         }
-
+    }
+    
+    public function cleanImport($serial) 
+    {
+        $this->initClient($serial);
+        $this->initSearchClient(true);
+        
+        $this->searchIndex->clearIndex();
+        
+        return $this->checkCache($serial, "open");    
     }
 
     public function checkCache($serial, $type = "modified")
