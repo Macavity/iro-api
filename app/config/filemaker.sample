@@ -1,0 +1,10 @@
+<?php
+
+return [
+    'db' => '',
+    'host' => '',
+    'username' => '',
+    'password' => '',
+    
+    'project_list' => ''
+];
