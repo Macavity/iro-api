@@ -7,9 +7,9 @@ iRO API is a simple API allowing clients to view the data of their iRO Databases
 
 # Group Public Data
 
-## List of public jobs [/data/{serial}/jobs/{sort}/{type}{?forceRefresh}]
+## Public Project Collection [/data/{serial}/jobs/{sort}/{type}{?forceRefresh}]
 
-### List all public jobs [GET]
+### List all public projects [GET]
 
 + Parameters
     + serial: `12345-12345-12345` (text) - Serial of the target database
@@ -64,4 +64,45 @@ iRO API is a simple API allowing clients to view the data of their iRO Databases
                     "rewrite_link": "123-Trainee_m_w_Muenchen"
                 }
             ]
+        }
+
+## Single public project [/data/{serial}/job-detail/{id}]
+
+### Get detailed data of single public project [GET]
+
++ Parameters
+    + serial: `12345-12345-12345` (text) - Serial of the target database
+    + id: `1000` (number) - Project id
+
++ Response 200 (application/json)
+    
+        {
+            "result": {
+                "objectID": 372,
+                "fm_id": 372,
+                "timestamp": 1486567471,
+                "importCalendarDay": 2017163,
+                "last_modified_date": "08.02.2017 16:24:31",
+                "last_modified": 1486567471,
+                "visible": 1,
+                "formatter": 1,
+                "start_date": "2017-02-08",
+                "position": "Salesmanager",
+                "industry": "",
+                "location": "",
+                "contact": "",
+                "contact_mail": "",
+                "lang": "de",
+                "full_text": "Salesmanager",
+                "rewrite_link": "372-Salesmanager",
+                "seo_title": "Salesmanager, ",
+                "seo_desc": "",
+                "job_intro": "",
+                "Web_Detailslink": "http://www.your-website.com/job/372",
+                "job_description": "" ,
+                "job_candidate": "",
+                "job_resume": "",
+                "job_desirability": ""
+            },
+            "log": null
         }
