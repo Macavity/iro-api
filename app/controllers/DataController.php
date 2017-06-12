@@ -536,8 +536,6 @@ class DataController extends BaseController
             $jobMirror->data = json_encode($jobData);
             $jobMirror->save();
 
-            //$this->log("Live Version");
-
             return Response::json(array(
                 'result' => $jobData,
                 'log' => $this->getLog(),

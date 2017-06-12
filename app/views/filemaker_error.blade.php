@@ -4,7 +4,7 @@
     <div class="front-page">
         <div class="row">
             <div class="col-md-6">
-                <div class="alert alert-info">FileMaker Fehler {{ $code }} {{ $error }}</div>
+                <div class="alert alert-info">API Fehler {{ $code }} {{ $error }}</div>
                 @if (count($log))
                 <ul>
                     @foreach( $log as $item)
