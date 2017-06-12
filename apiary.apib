@@ -7,7 +7,7 @@ iRO API is a simple API allowing clients to view the data of their iRO Databases
 
 # Group Public Data
 
-## Public Project Collection [/data/{serial}/jobs/{sort}/{type}]
+## Public Project Collection [/data/{serial}/jobs/{sort}/{type}?{forceRefresh}]
 
 ### List all public projects [GET]
 
@@ -99,10 +99,20 @@ iRO API is a simple API allowing clients to view the data of their iRO Databases
                 "seo_desc": "",
                 "job_intro": "",
                 "Web_Detailslink": "http://www.your-website.com/job/372",
-                "job_description": "" ,
+                "job_description": "",
                 "job_candidate": "",
                 "job_resume": "",
                 "job_desirability": ""
             },
             "log": null
         }
+
+# Data Structures
+
+## Project (object)
++ percent_off: 25 (number)
+
+    A positive integer between 1 and 100 that represents the discount the
+    coupon will apply.
+
++ redeem_by (number) - Date after which the coupon can no longer be redeemed
