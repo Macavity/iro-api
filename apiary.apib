@@ -7,23 +7,31 @@ iRO API is a simple API allowing clients to view the data of their iRO Databases
 
 # Group Public Data
 
-## Public Jobs [/data/{serial}/jobs/{sort}/{type}{?forceRefresh}]
+## List of public jobs [/data/{serial}/jobs/{sort}/{type}{?forceRefresh}]
 
 ### List all public jobs [GET]
 
 + Parameters
-    + serial: "006D4-PPAD0-R70AA" (text) - Serial of the target database
-    + sort: "desc" (text) - Sorting
-    + type: "normal" (optional, text)
-    + forceRefresh (optional)
+    + serial: `12345-12345-12345` (text) - Serial of the target database
+    + sort (enum[string], optional) - Sorting direction
+        + Default: `desc`
+        + Members
+            + `asc`
+            + `desc`
+    + type (optional, enum[string])
+        + Default: `normal`
+        + Members
+            + `normal`
+            + `archiv`
+    + forceRefresh (optional, boolean)
         + Default: false
 
 
 + Response 200 (application/json)
 
         {
-            "cacheActive": false,
-            "cacheId": "14-joblist-normal-desc",
+            "cacheActive": false
+            "cacheId": "1-joblist-normal-desc",
             "results": [
                 {
                     "fm_id": "123",
@@ -57,59 +65,3 @@ iRO API is a simple API allowing clients to view the data of their iRO Databases
                 }
             ]
         }
-
-# Group Private
-
-## Projects [/projects]
-
-### List all Projects [GET]
-
-+ Response 201 (application/json)
-
-        {
-            "results": [
-                {
-                    "id": 456
-                }    
-            ]
-        }
-
-### Create a new Project [POST]
-
-You may create a new project with this. It takes a JSON
-object containing a project.
-
-+ Request (application/json)
-
-        {
-            "title": "",
-            "type": ""
-        }
-
-+ Response 201 (application/json)
-
-    + Headers
-
-            Location: /questions/2
-
-    + Body
-
-            {
-                "projectId": 123
-            }
-
-## Bills [/bills]
-
-TODO
-
-## Companies [/companies]
-
-TODO
-
-## Tasks [/tasks]
-
-TODO
-
-## Dates [/dates]
-
-TODO
