@@ -49,10 +49,10 @@ class PageController extends BaseController {
             return;
         }
 
-//        if(in_array($this->client->id, array(12,14))){
-//            $this->showError("Der XING-Import ist vorübergehend deaktiviert.");
-//            return;
-//        }
+        if(in_array($this->client->id, Config::get('xing.disabled_clients'))){
+            $this->showError("Der XING-Import ist vorübergehend deaktiviert.");
+            return;
+        }
 
         $this->oAuthClient = $this->getOAuthClient();
 

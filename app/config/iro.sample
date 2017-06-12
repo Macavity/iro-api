@@ -1,0 +1,7 @@
+<?php
+
+return array(
+    'job_url_base' => array(
+        1 => 'https://www.client-website.com/jobs/?jobid='
+    ),
+);
