@@ -19,7 +19,7 @@ class AlgoliaController extends DataController {
     public function initSearchClient($writeAccess = false){
 
         if(!in_array($this->client->id, Config::get('algolia.whitelist_clients'))) {
-            return Response::view('error', array(), 404);
+            throw new Exception('Unauthorized action.', 403);
         }
 
         if($writeAccess){

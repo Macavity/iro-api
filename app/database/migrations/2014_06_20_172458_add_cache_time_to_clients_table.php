@@ -13,8 +13,8 @@ class AddCacheTimeToClientsTable extends Migration {
 	public function up()
 	{
 		Schema::table('clients', function(Blueprint $table) {
-			$table->integer('cache_time');
-            $table->string('api_token');
+			$table->integer('cache_time')->default(0);
+            $table->string('api_token')->default('');
 		});
 	}
 

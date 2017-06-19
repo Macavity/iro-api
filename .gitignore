@@ -12,5 +12,6 @@ production.request.log
 app/config/algolia.php
 app/config/ga.php
 app/config/xing.php
+testing.sqlite
 app/config/filemaker.php
 iro.php
