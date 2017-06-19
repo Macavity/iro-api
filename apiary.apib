@@ -7,23 +7,31 @@ iRO API is a simple API allowing clients to view the data of their iRO Databases
 
 # Group Public Data
 
-## Public Jobs [/data/{serial}/jobs/{sort}/{type}{?forceRefresh}]
+## Public Project Collection [/data/{serial}/jobs/{sort}/{type}?{forceRefresh}]
 
-### List all public jobs [GET]
+### List all public projects [GET]
 
 + Parameters
-    + serial: "006D4-PPAD0-R70AA" (text) - Serial of the target database
-    + sort: "desc" (text) - Sorting
-    + type: "normal" (optional, text)
-    + forceRefresh (optional)
+    + serial: `12345-12345-12345` (text) - Serial of the target database
+    + sort (enum[string], optional) - Sorting direction
+        + Default: `desc`
+        + Members
+            + `asc`
+            + `desc`
+    + type (optional, enum[string])
+        + Default: `normal`
+        + Members
+            + `normal`
+            + `archiv`
+    + forceRefresh (optional, boolean)
         + Default: false
 
 
 + Response 200 (application/json)
 
         {
-            "cacheActive": false,
-            "cacheId": "14-joblist-normal-desc",
+            "cacheActive": false
+            "cacheId": "1-joblist-normal-desc",
             "results": [
                 {
                     "fm_id": "123",
@@ -58,58 +66,48 @@ iRO API is a simple API allowing clients to view the data of their iRO Databases
             ]
         }
 
-# Group Private
+## Single public project [/data/{serial}/job-detail/{id}]
 
-## Projects [/projects]
+### Get detailed data of single public project [GET]
 
-### List all Projects [GET]
++ Parameters
+    + serial: `12345-12345-12345` (text) - Serial of the target database
+    + id: `1000` (number) - Project id
 
-+ Response 201 (application/json)
++ Response 200 (application/json)
+    + Attributes (Project Response)
 
-        {
-            "results": [
-                {
-                    "id": 456
-                }    
-            ]
-        }
+# Data Structures
 
-### Create a new Project [POST]
+## Project (object)
++ fm_id: 1 (number) - Represents the project id in iRO
++ visible: 1 (number)
++ timestamp: 1486567471 (number)
++ importCalendarDay: 2017163 (number)
++ last_modified_date: `08.02.2017 16:24:31` (string)
++ last_modified: 1486567471 (number)
++ start_date: `2017-02-08` (string) - Field "Start"
++ formatter: 1 (enum[number]) - 1 for Standard format or 2 for Markdown format
+    + 1 - Standard
+    + 2 - Markdown
++ rewrite_link: `372-Salesmanager`
++ Web_Detailslink: `http://www.your-website.com/job/372` (string) - Link to your website, please contact us how you can specify this
++ seo_title: `Salesmanager, `
++ seo_desc (string)
++ position: `Salesmanager` (string) - Field "Projekt"
++ industry: `Halbleiter` (string) - Field "Branche"
++ location: `Berlin` (string) - Field "Ort"
++ job_intro (string) - Field "Anonyme Einleitung für Webseite" bzw "Web-Intro"
++ job_description - Field "Die Position"
++ job_candidate - Field "Der ideale Kandidat"
++ job_desirability - Field "Attraktivität der Aufgabe"
++ job_resume - Field "Schlusstext"
++ contact: `Max Müller` (string) - Field "Web Berater"
++ contact_mail: `max.mueller@gmail.com` (string) - Field "Web E-Mail"
++ lang: `de` (enum[string]) - Field "Sprache"
+    + "de" - Deutsch
+    + "en" - Englisch
++ full_text (string) - Computed value for text search functionality, contains all text fields
 
-You may create a new project with this. It takes a JSON
-object containing a project.
-
-+ Request (application/json)
-
-        {
-            "title": "",
-            "type": ""
-        }
-
-+ Response 201 (application/json)
-
-    + Headers
-
-            Location: /questions/2
-
-    + Body
-
-            {
-                "projectId": 123
-            }
-
-## Bills [/bills]
-
-TODO
-
-## Companies [/companies]
-
-TODO
-
-## Tasks [/tasks]
-
-TODO
-
-## Dates [/dates]
-
-TODO
+## Project Response
++ results (Project)
