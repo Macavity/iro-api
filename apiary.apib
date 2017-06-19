@@ -7,7 +7,7 @@ iRO API is a simple API allowing clients to view the data of their iRO Databases
 
 # Group Public Data
 
-## Public Project Collection [/data/{serial}/jobs/{sort}/{type}]
+## Public Project Collection [/data/{serial}/jobs/{sort}/{type}?{forceRefresh}]
 
 ### List all public projects [GET]
 
@@ -75,34 +75,39 @@ iRO API is a simple API allowing clients to view the data of their iRO Databases
     + id: `1000` (number) - Project id
 
 + Response 200 (application/json)
-    
-        {
-            "result": {
-                "objectID": 372,
-                "fm_id": 372,
-                "timestamp": 1486567471,
-                "importCalendarDay": 2017163,
-                "last_modified_date": "08.02.2017 16:24:31",
-                "last_modified": 1486567471,
-                "visible": 1,
-                "formatter": 1,
-                "start_date": "2017-02-08",
-                "position": "Salesmanager",
-                "industry": "",
-                "location": "",
-                "contact": "",
-                "contact_mail": "",
-                "lang": "de",
-                "full_text": "Salesmanager",
-                "rewrite_link": "372-Salesmanager",
-                "seo_title": "Salesmanager, ",
-                "seo_desc": "",
-                "job_intro": "",
-                "Web_Detailslink": "http://www.your-website.com/job/372",
-                "job_description": "" ,
-                "job_candidate": "",
-                "job_resume": "",
-                "job_desirability": ""
-            },
-            "log": null
-        }
+    + Attributes (Project Response)
+
+# Data Structures
+
+## Project (object)
++ fm_id: 1 (number) - Represents the project id in iRO
++ visible: 1 (number)
++ timestamp: 1486567471 (number)
++ importCalendarDay: 2017163 (number)
++ last_modified_date: `08.02.2017 16:24:31` (string)
++ last_modified: 1486567471 (number)
++ start_date: `2017-02-08` (string) - Field "Start"
++ formatter: 1 (enum[number]) - 1 for Standard format or 2 for Markdown format
+    + 1 - Standard
+    + 2 - Markdown
++ rewrite_link: `372-Salesmanager`
++ Web_Detailslink: `http://www.your-website.com/job/372` (string) - Link to your website, please contact us how you can specify this
++ seo_title: `Salesmanager, `
++ seo_desc (string)
++ position: `Salesmanager` (string) - Field "Projekt"
++ industry: `Halbleiter` (string) - Field "Branche"
++ location: `Berlin` (string) - Field "Ort"
++ job_intro (string) - Field "Anonyme Einleitung für Webseite" bzw "Web-Intro"
++ job_description - Field "Die Position"
++ job_candidate - Field "Der ideale Kandidat"
++ job_desirability - Field "Attraktivität der Aufgabe"
++ job_resume - Field "Schlusstext"
++ contact: `Max Müller` (string) - Field "Web Berater"
++ contact_mail: `max.mueller@gmail.com` (string) - Field "Web E-Mail"
++ lang: `de` (enum[string]) - Field "Sprache"
+    + "de" - Deutsch
+    + "en" - Englisch
++ full_text (string) - Computed value for text search functionality, contains all text fields
+
+## Project Response
++ results (Project)
