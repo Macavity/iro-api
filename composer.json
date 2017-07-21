@@ -1,6 +1,6 @@
 {
 	"name": "PaneonAPI",
-	"version": "1.2.8",
+	"version": "1.2.9",
 	"keywords": ["framework", "laravel"],
 	"license": "MIT",
 	"require": {
