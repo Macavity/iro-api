@@ -38,6 +38,24 @@
             </tr>
             </thead>
             <tr>
+                <td>Data: Joblist (Normal)</td>
+                <td>
+                    <a href="{{ action('DataController@jobListAll', ['serial' => $client->serial]) }}" target="_blank">Normal</a>
+                </td>
+                <td>
+                    <a href="{{ action('DataController@jobListAll', ['serial' => $client->serial]) }}?debug=true" target="_blank">Debug</a>
+                </td>
+            </tr>
+            <tr>
+                <td>Data: Joblist (Normal, No-Cache)</td>
+                <td>
+                    <a href="{{ action('DataController@jobListAll', ['serial' => $client->serial]) }}?forceRefresh=1" target="_blank">Normal</a>
+                </td>
+                <td>
+                    <a href="{{ action('DataController@jobListAll', ['serial' => $client->serial]) }}?forceRefresh=1&debug=true" target="_blank">Debug</a>
+                </td>
+            </tr>
+            <tr>
                 <td>Search: Check Cache (Änderungen)</td>
                 <td>
                     <a href="{{ action('AlgoliaController@checkCache', ['serial' => $client->serial]) }}" target="_blank">Normal</a>
