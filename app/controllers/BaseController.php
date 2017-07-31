@@ -68,6 +68,7 @@ class BaseController extends Controller {
      * @var Client
      */
     protected $client = null;
+    protected $clientCanUseAlgolia = false;
 
     /**
      * @var string
@@ -135,6 +136,7 @@ class BaseController extends Controller {
          * Find the Client
          */
         $this->client = Client::where('serial', '=', $this->serialNumber)->first();
+        $this->clientCanUseAlgolia = in_array($this->client->id, Config::get('algolia.whitelist_clients'));
 
         if(!$this->client)
         {

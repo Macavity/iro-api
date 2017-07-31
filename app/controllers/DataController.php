@@ -71,10 +71,8 @@ class DataController extends BaseController
                 }
 
                 $jobList = array();
-                $this->log("Foreach records");
 
                 foreach ($records as $record) {
-
                     /** @var $record FileMaker_Record */
 
                     /** @var $jobId int */
@@ -185,7 +183,7 @@ class DataController extends BaseController
 
                     $jobList[] = $row;
                 }
-                $this->log("foreach end");
+
                 // Cache the joblist for 24 Hours
                 $expiresAt = Carbon::now()->addHours(1);
 
