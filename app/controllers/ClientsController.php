@@ -82,7 +82,6 @@ class ClientsController extends BaseController {
         $client = Client::find($id);
 
         $cacheJoblistId = $client->id."-joblist-normal";
-
     }
 
 	/**
